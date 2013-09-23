@@ -1,4 +1,4 @@
-package at.fhooe.usmile.gpjshell;
+package net.sourceforge.gpj.cardservices.interfaces;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
@@ -14,7 +14,8 @@ import org.simalliance.openmobileapi.Session;
 public class OpenMobileAPICard extends Card {
 
 	private Session mSession = null;
-
+	private static final byte[] AID_CM = {(byte) 0xa0, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00 };
+	
 	public OpenMobileAPICard(Session _session) {
 		mSession = _session;
 	}
@@ -46,16 +47,16 @@ public class OpenMobileAPICard extends Card {
 	@Override
 	public CardChannel openLogicalChannel() throws CardException {
 		try {
-			return new OpenMobileAPICardChannel(openLogicalChannel(null), this);
+			return new OpenMobileAPICardChannel(openLogicalChannel(AID_CM), this);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
-
+				
 	protected Channel openLogicalChannel(byte[] aid) throws CardException, IOException {
 		try {
-			return mSession.openLogicalChannel(aid);
+			return mSession.openLogicalChannel(aid);																																																																		
 		} catch (NoSuchElementException e){
 			e.printStackTrace();
 		}

@@ -16,25 +16,6 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true" />
 
-    <LinearLayout 
-	    android:id="@+id/linearButtons"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/reader_spinner"
-        android:layout_alignRight="@+id/reader_spinner"
-	        android:layout_below="@+id/reader_spinner">
-	    <Button
-	        android:id="@+id/button1"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="Install from storage" />
-	    <Button
-	        android:id="@+id/button2"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="List Applets" />
-    </LinearLayout>
-
     <TextView
         android:id="@+id/log"
         android:layout_width="wrap_content"
@@ -42,8 +23,45 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/linearButtons"
+        android:layout_below="@+id/button1"
         android:scrollbars="vertical"
         android:text="" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/reader_spinner"
+        android:text="Choose Applet " />
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/button3"
+        android:layout_alignRight="@+id/button3"
+        android:layout_below="@+id/button3"
+        android:text="Install Applet" />
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/button1"
+        android:layout_toLeftOf="@+id/button1"
+        android:text="List Applets" />
+
+    <TextView
+        android:id="@+id/text1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/button3"
+        android:layout_alignLeft="@+id/log"
+        android:layout_below="@+id/reader_spinner"
+        android:layout_toLeftOf="@+id/button3"
+        android:gravity="center"
+        android:text="no file selected"
+        android:textStyle="bold" />
 
 </RelativeLayout>

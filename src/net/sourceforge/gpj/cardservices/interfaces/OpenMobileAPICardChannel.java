@@ -1,4 +1,4 @@
-package at.fhooe.usmile.gpjshell;
+package net.sourceforge.gpj.cardservices.interfaces;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

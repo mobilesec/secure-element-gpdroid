@@ -5,20 +5,24 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="8"
+        android:minSdkVersion="17"
         android:targetSdkVersion="17" />
 
-    <uses-permission android:name="org.simalliance.openmobileapi.SMARTCARD"></uses-permission>
+    <uses-permission android:name="org.simalliance.openmobileapi.SMARTCARD" >
+    </uses-permission>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/> 
-    
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-    	<uses-library android:name="org.simalliance.openmobileapi" android:required="true"/>
+        <uses-library
+            android:name="org.simalliance.openmobileapi"
+            android:required="true" />
+
         <activity
             android:name="at.fhooe.usmile.gpjshell.MainActivity"
             android:label="@string/app_name" >
@@ -28,9 +32,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name="at.fhooe.usmile.gpjshell.AppletListActivity" >
+        </activity>
         <activity
-            android:name="at.fhooe.usmile.gpjshell.GPShellActivity"
-            android:label="@string/title_activity_gpshell" >
+            android:name="at.fhooe.usmile.gpjshell.AppletDetailActivity"
+            android:label="@string/title_activity_applet_detail" 
+            android:theme="@android:style/Theme.Dialog" >
         </activity>
     </application>
 

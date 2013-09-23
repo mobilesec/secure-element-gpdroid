@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">GPJShell</string>
+    <string name="app_name">GPDroid</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_gpshell">GPDroid</string>
+    <string name="title_activity_applet_detail">AppletDetailActivity</string>
     <string name="hello_world">Hello world!</string>
-    <string name="title_activity_gpshell">GPShellActivity</string>
 
 </resources>
