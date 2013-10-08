@@ -37,7 +37,8 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-public class MainActivity extends Activity implements SEService.CallBack {
+public class MainActivity extends Activity implements SEService.CallBack,
+		TCPFileResultListener {
 
 	private final static String LOG_TAG = "GPJShell";
 	private final static int ACTIVITYRESULT_FILESELECTED = 101;
@@ -47,9 +48,11 @@ public class MainActivity extends Activity implements SEService.CallBack {
 	private Button buttonConnect = null;
 
 	private static LogMe MAIN_Log;
-	
+
 	private OpenMobileAPITerminal mTerminal = null;
 	private Button buttonListApplet, buttonSelectApplet;
+
+	private TCPConnection mTCPConnection = null;
 
 	public enum APDU_COMMAND {
 		APDU_INSTALL, APDU_DELETE, APDU_LISTAPPLETS, APDU_SELECT, APDU_SEND
@@ -70,9 +73,9 @@ public class MainActivity extends Activity implements SEService.CallBack {
 		// layout.setOrientation(1);
 
 		mFileNameView = (TextView) findViewById(R.id.text1);
-		
+
 		loadPreferences();
-		
+
 		mLog = (TextView) findViewById(R.id.log);
 		mLog.setMovementMethod(new ScrollingMovementMethod());
 		// layout.addView(mLog);
@@ -80,12 +83,17 @@ public class MainActivity extends Activity implements SEService.CallBack {
 		GlobalPlatformService.usage();
 
 		mTerminal = new OpenMobileAPITerminal(this, this);
+
+		mTCPConnection = new TCPConnection(this, this);
+		Thread td = new Thread(mTCPConnection);
+		td.start();
+
 	}
 
 	private void loadPreferences() {
 
 		AppPreferences prefs = new AppPreferences(getApplicationContext());
-		if(!("".equals(prefs.getSelectedCap()))){
+		if (!("".equals(prefs.getSelectedCap()))) {
 			mAppletUrl = prefs.getSelectedCap();
 			mFileNameView.setText(Uri.parse(mAppletUrl).getLastPathSegment());
 		}
@@ -95,6 +103,9 @@ public class MainActivity extends Activity implements SEService.CallBack {
 	protected void onDestroy() {
 		if (mTerminal != null) {
 			mTerminal.shutdown();
+		}
+		if(mTCPConnection!=null){
+			mTCPConnection.stopConnection();
 		}
 		super.onDestroy();
 	}
@@ -116,8 +127,9 @@ public class MainActivity extends Activity implements SEService.CallBack {
 				Uri uri = _data.getData();
 				MAIN_Log.d(LOG_TAG, "File Uri: " + uri.toString());
 				mAppletUrl = uri.toString();
-				new AppPreferences(getApplicationContext()).saveSelectedCap(mAppletUrl);
-				
+				new AppPreferences(getApplicationContext())
+						.saveSelectedCap(mAppletUrl);
+
 				mFileNameView.setText(uri.getLastPathSegment());
 				// performCommand(APDU_COMMAND.APDU_INSTALL,
 				// mReaderSpinner.getSelectedItemPosition(), uri.toString());
@@ -227,7 +239,8 @@ public class MainActivity extends Activity implements SEService.CallBack {
 			GPConnection.getInstance().initializeKeys(channel);
 			GPConnection.getInstance().open();
 
-			MAIN_Log.d(LOG_TAG, "GPShell finished opening OpenMobileAPI Terminal");
+			MAIN_Log.d(LOG_TAG,
+					"GPShell finished opening OpenMobileAPI Terminal");
 
 			GPConnection.getInstance().openSecureChannel(
 					(String) mReaderSpinner.getSelectedItem());
@@ -236,7 +249,11 @@ public class MainActivity extends Activity implements SEService.CallBack {
 
 			switch (_cmd) {
 			case APDU_INSTALL:
-				installApplet();
+				if (_param != null && _param instanceof String) {
+					installApplet((String)_param);
+				} else {
+					installApplet();
+				}
 				break;
 			case APDU_DELETE:
 			case APDU_LISTAPPLETS:
@@ -268,26 +285,38 @@ public class MainActivity extends Activity implements SEService.CallBack {
 
 	private void installApplet() throws IOException, MalformedURLException,
 			GPInstallForLoadException, GPLoadException, CardException {
+		installApplet(mAppletUrl);
+	}
+
+	private void installApplet(String _url) throws IOException,
+			MalformedURLException, GPInstallForLoadException, GPLoadException,
+			CardException {
 		// String fileUrl =
 		// "file:"+Environment.getExternalStorageDirectory().getPath() +
 		// "/usmile/instApplet/apdutester.cap";
-		if (mAppletUrl == null) {
+		if (_url == null) {
 			MAIN_Log.d(LOG_TAG, "no Applet selected");
 			return;
 		}
-		if (!(mAppletUrl).endsWith(".cap")) {
+		if (!(_url).endsWith(".cap")) {
 			throw new IOException("Not a valid path or not a cap file");
 		}
 		// String fileUrl = (String) _param;
-		MAIN_Log.d(LOG_TAG, "Loading Applet from " + mAppletUrl);
+		MAIN_Log.d(LOG_TAG, "Loading Applet from " + _url);
 
-		GPConnection.getInstance().installCapFile(mAppletUrl);
+		GPConnection.getInstance().installCapFile(_url);
 
 		MAIN_Log.d(LOG_TAG, "Installation successful");
 	}
 
+	@Override
+	public void fileReceived(String _url) {
+		performCommand(APDU_COMMAND.APDU_INSTALL, mReaderSpinner.getSelectedItemPosition(),_url);
+	}
+
 	private void listApplets() throws CardException {
-		GPAppletData mApplets = GPConnection.getInstance().loadAppletsfromCard();
+		GPAppletData mApplets = GPConnection.getInstance()
+				.loadAppletsfromCard();
 		Intent intent = new Intent(this, AppletListActivity.class);
 		startActivity(intent);
 
@@ -339,8 +368,8 @@ public class MainActivity extends Activity implements SEService.CallBack {
 		}
 
 	}
-	
-	public static LogMe log(){
+
+	public static LogMe log() {
 		return MAIN_Log;
 	}
 
