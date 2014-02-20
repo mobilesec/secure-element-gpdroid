@@ -18,6 +18,7 @@ import net.sourceforge.gpj.cardservices.exceptions.GPInstallForLoadException;
 import net.sourceforge.gpj.cardservices.exceptions.GPLoadException;
 import net.sourceforge.gpj.cardservices.exceptions.GPSecurityDomainSelectionException;
 import android.util.Log;
+import at.fhooe.usmile.gpjshell.objects.GPAppletData;
 
 public class GPConnection {
 	

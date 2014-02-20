@@ -6,5 +6,15 @@
     <string name="title_activity_gpshell">GPDroid</string>
     <string name="title_activity_applet_detail">AppletDetailActivity</string>
     <string name="hello_world">Hello world!</string>
-
+    
+    <!-- addKeyset Activity -->
+    <string name="title_activity_add_keyset">Please enter a new Keyset</string>
+    <string name="keyset_id">Keyset ID</string>
+    <string name="keyset_version">Version</string>
+    <string name="keyset_mac">MAC</string>
+    <string name="keyset_dek">ENC</string>
+    <string name="keyset_kek">KEK</string>
+    <string name="keyset_positive">OK</string>
+    <string name="keyset_negative">Cancel</string>
+    
 </resources>
