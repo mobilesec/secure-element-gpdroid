@@ -34,6 +34,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
@@ -61,6 +63,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	private Button buttonListApplet, buttonSelectApplet;
 
 	private TCPConnection mTCPConnection = null;
+	private ArrayAdapter<String> mKeysetAdapter;
 
 	public enum APDU_COMMAND {
 		APDU_INSTALL, APDU_DELETE, APDU_LISTAPPLETS, APDU_SELECT, APDU_SEND
@@ -69,6 +72,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	private String mAppletUrl = null;
 	private TextView mFileNameView = null;
 	private List<String> mKeysets = null;
+	private Map<String, GPKeyset> mKeysetMap = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +84,8 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		// layout.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT,
 		// LayoutParams.WRAP_CONTENT));
 		// layout.setOrientation(1);
+		
+
 
 		mFileNameView = (TextView) findViewById(R.id.text1);
 		mButtonAddKeyset = (Button) findViewById(R.id.btn_add_keyset);
@@ -102,17 +108,15 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 		mTerminal = new OpenMobileAPITerminal(this, this);
 		
-		KeysetDataSource source = new KeysetDataSource(this);
-		source.open();
-		mKeysets = Arrays.asList(source.getKeysets().keySet().toArray(new String[0]));
-		source.close();
-		addKeysetItemsOnSpinner(mKeysets);
+
 
 		mTCPConnection = new TCPConnection(this, this);
 		Thread td = new Thread(mTCPConnection);
 		td.start();
 
 	}
+
+	
 
 	private void loadPreferences() {
 
@@ -162,14 +166,19 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 			case ACTIVITYRESULT_KEYSET_SET:
 				GPKeyset keyset = (GPKeyset) _data.getExtras().get(GPKeyset.KEYSET);
+				//need to set reader to keyset
+				keyset.setReaderName((String) mReaderSpinner.getSelectedItem()); 
+				
 				KeysetDataSource source = new KeysetDataSource(this);
 				
 				source.open();
 				source.insertKeyset(keyset);
-				Map<String, GPKeyset> keysetMap = source.getKeysets();
+				mKeysetMap = source.getKeysets((String) mReaderSpinner.getSelectedItem());
 				source.close();
 				
-				List<String> keysets = Arrays.asList(keysetMap.keySet().toArray(new String[0]));
+//				mKeysetAdapter.add(keyset.getName());
+				
+				List<String> keysets = Arrays.asList(mKeysetMap.keySet().toArray(new String[0]));
 				addKeysetItemsOnSpinner(keysets);
 				
 				break;
@@ -186,9 +195,10 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	public void addKeysetItemsOnSpinner(List<String> keysets) {
 		mKeysetSpinner = (Spinner) findViewById(R.id.keyset_spinner);
 		
-		ArrayAdapter<String> keysetAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, keysets);
-		keysetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		mKeysetSpinner.setAdapter(keysetAdapter);
+		mKeysetAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, keysets);
+		mKeysetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mKeysetSpinner.setAdapter(mKeysetAdapter);
+
 	}
 
 	// add items into spinner dynamically
@@ -211,6 +221,26 @@ public class MainActivity extends Activity implements SEService.CallBack,
 			dataAdapter
 					.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 			mReaderSpinner.setAdapter(dataAdapter);
+			
+			//refresh keyset spinner when new reader is selected
+			mReaderSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+				@Override
+				public void onItemSelected(AdapterView<?> arg0, View arg1,
+						int arg2, long arg3) {
+					KeysetDataSource source = new KeysetDataSource(MainActivity.this);
+					source.open();
+					mKeysetMap = source.getKeysets((String) mReaderSpinner.getSelectedItem());
+					source.close();
+					addKeysetItemsOnSpinner(Arrays.asList(mKeysetMap.keySet().toArray(new String[0])));
+				}
+
+				@Override
+				public void onNothingSelected(AdapterView<?> arg0) {
+					// TODO Auto-generated method stub
+					
+				}
+			});
 
 			buttonConnect.setOnClickListener(new OnClickListener() {
 
@@ -254,6 +284,12 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	public void serviceConnected(SEService arg0) {
 		addReaderItemsOnSpinner(mTerminal.getReaders());
+		KeysetDataSource source = new KeysetDataSource(this);
+		source.open();
+		mKeysetMap = source.getKeysets((String) mReaderSpinner.getSelectedItem());
+		mKeysets = Arrays.asList(mKeysetMap.keySet().toArray(new String[0]));
+		source.close();
+		addKeysetItemsOnSpinner(mKeysets);
 	}
 
 	private void performCommand(APDU_COMMAND _cmd, int _seekReader) {
@@ -262,6 +298,8 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	private void performCommand(APDU_COMMAND _cmd, int _seekReader,
 			Object _param) {
+		GPKeyset keyset = mKeysetMap.get((String) mKeysetSpinner.getSelectedItem());
+		
 		try {
 			Card c = null;
 			try {
@@ -286,8 +324,8 @@ public class MainActivity extends Activity implements SEService.CallBack,
 						+ GPUtil.byteArrayToString(c.getATR().getBytes()));
 			}
 			CardChannel channel = c.openLogicalChannel();
-
-			GPConnection.getInstance().initializeKeys(channel);
+			
+			GPConnection.getInstance().initializeKeys(channel, keyset);
 			GPConnection.getInstance().open();
 
 			MAIN_Log.d(LOG_TAG,

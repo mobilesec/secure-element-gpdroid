@@ -9,7 +9,8 @@
     
     <!-- addKeyset Activity -->
     <string name="title_activity_add_keyset">Please enter a new Keyset</string>
-    <string name="keyset_id">Keyset ID</string>
+    <string name="keyset_id">ID</string>
+    <string name="keyset_name">Keyset Name</string>
     <string name="keyset_version">Version</string>
     <string name="keyset_mac">MAC</string>
     <string name="keyset_dek">ENC</string>
