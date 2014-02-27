@@ -126,7 +126,7 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
 
     public static final byte[] defaultKekKey = { 0x40, 0x41, 0x42, 0x43, 0x44,
             0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
-
+    
     public static Map<String, byte[]> SPECIAL_MOTHER_KEYS = new TreeMap<String, byte[]>();
 
     static {
@@ -460,10 +460,11 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
      *             security domain arise.
      */
     public void openWithDefaultKeys() throws CardException {
-        open();
+//        open();
         int keySet = 0;
         setKeys(keySet, defaultEncKey, defaultMacKey, defaultKekKey);
         openSecureChannel(keySet, 0, SCP_ANY, APDU_MAC, false);
+//        openSecureChannel(keySet, 0, SCP_02_15, APDU_ENC, true);
     }
 
     public boolean isSecureChannelOpen() {

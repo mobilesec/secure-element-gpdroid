@@ -41,8 +41,7 @@ public class OpenMobileAPICardChannel extends CardChannel{
 		ResponseAPDU response = null;
 		try {
 			byte [] byteResponse = null;
-//			byte test = (byte) ((byte) 0xA4 & 0xff);
-//			byte test2 = ((byte) 0xA4);
+
 			if ((command.getINS() == ((byte) 0xA4 & 0xff)) && (command.getP1() == (byte) 0x04)) {
 				mParentCard.closeChannels();
 				Log.d("CardChannel", "Select AID " +  GPUtil.byteArrayToString(command.getData()));

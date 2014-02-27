@@ -139,10 +139,15 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		}
 
 	}
-
+	
+	
 	// add items into spinner dynamically
 	public void addReaderItemsOnSpinner(Reader[] _readers) {
 
+		for (Reader reader : _readers) {
+			log().d(LOG_TAG, reader.getName());			
+		}
+		
 		mReaderSpinner = (Spinner) findViewById(R.id.reader_spinner);
 		buttonConnect = (Button) findViewById(R.id.button1);
 		buttonListApplet = (Button) findViewById(R.id.button2);
@@ -152,7 +157,6 @@ public class MainActivity extends Activity implements SEService.CallBack,
 			List<String> list = new ArrayList<String>();
 			for (int i = 0; i < _readers.length; i++) {
 				Reader reader = _readers[i];
-
 				list.add(reader.getName());
 			}
 			ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
@@ -315,6 +319,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	}
 
 	private void listApplets() throws CardException {
+		GPConnection.getInstance().openSecureChannel();
 		GPAppletData mApplets = GPConnection.getInstance()
 				.loadAppletsfromCard();
 		Intent intent = new Intent(this, AppletListActivity.class);
@@ -327,13 +332,14 @@ public class MainActivity extends Activity implements SEService.CallBack,
 						+ mApplets.getRegistry().allPackages().size()
 						+ " Applets.");
 
-		// listAppletsToLog();
+
+//		GPConnection.getInstance().openSecureChannel();
+
 	}
 
-	private void listAppletsToLog() throws CardException {
+	private void listAppletsToLog(AIDRegistry _registry) throws CardException {
 
-		AIDRegistry registry = GPConnection.getInstance().getRegistry();
-		for (AIDRegistryEntry e : registry) {
+		for (AIDRegistryEntry e : _registry) {
 			AID aid = e.getAID();
 			int numSpaces = (15 - aid.getLength());
 			String spaces = "";
