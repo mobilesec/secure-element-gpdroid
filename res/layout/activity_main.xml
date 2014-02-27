@@ -34,6 +34,15 @@
             android:minHeight="64dp"
             android:minWidth="64dp" />
 
+        <Button
+            android:id="@+id/btn_remove_keyset"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_weight="0"
+            android:background="@drawable/ic_action_remove"
+            android:minHeight="64dp"
+            android:minWidth="64dp" />
+
     </LinearLayout>
 
     <LinearLayout
@@ -54,6 +63,16 @@
             android:background="@drawable/ic_action_add_to_queue"
             android:minHeight="64dp"
             android:minWidth="64dp" />
+
+        <Button
+            android:id="@+id/btn_remove_channelset"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_weight="0"
+            android:background="@drawable/ic_action_remove"
+            android:minHeight="64dp"
+            android:minWidth="64dp" />
+
     </LinearLayout>
 
     <LinearLayout

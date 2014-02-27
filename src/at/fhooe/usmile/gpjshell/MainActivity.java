@@ -63,6 +63,8 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	private Button buttonConnect = null;
 	private Button mButtonAddKeyset = null;
 	private Button mButtonAddChannelSet = null;
+	private Button mButtonRemoveKeyset = null;
+	private Button mButtonRemoveChannelset = null; 
 
 	private static LogMe MAIN_Log;
 
@@ -114,6 +116,41 @@ public class MainActivity extends Activity implements SEService.CallBack,
 			public void onClick(View v) {
 				Intent intent = new Intent(MainActivity.this, AddChannelSetActivity.class);
 				startActivityForResult(intent, ACTIVITYRESULT_CHANNEL_SET);
+			}
+		});
+		
+		mButtonRemoveChannelset = (Button) findViewById(R.id.btn_remove_channelset);
+		mButtonRemoveChannelset.setOnClickListener(new View.OnClickListener() {
+			//Remove actual selected channelset
+			@Override
+			public void onClick(View v) {
+				GPChannelSet channel = mChannelSetMap.get(mChannelSpinner.getSelectedItem());
+				
+				ChannelSetDataSource channelSource = new ChannelSetDataSource(MainActivity.this);
+				channelSource.open();
+				channelSource.remove(channel.getChannelId());
+				channelSource.close();
+				
+				mChannelSetAdapter.remove(channel.getChannelNameString());
+				mChannelSetAdapter.notifyDataSetChanged();
+			}
+		});
+		
+		mButtonRemoveKeyset = (Button) findViewById(R.id.btn_remove_keyset);
+		mButtonRemoveKeyset.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				GPKeyset keyset = mKeysetMap.get(mKeysetSpinner.getSelectedItem());
+				
+				KeysetDataSource keysetSource = new KeysetDataSource(MainActivity.this);
+				keysetSource.open();
+				keysetSource.remove(keyset.getID());
+				keysetSource.close();
+				
+				mKeysetAdapter.remove(keyset.getName());
+				mKeysetAdapter.notifyDataSetChanged();
+				
 			}
 		});
 		
@@ -208,7 +245,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 				mChannelSetMap = channelSource.getChannelSets();
 				channelSource.close();
 				
-				addKeysetItemsOnSpinner(Arrays.asList(mKeysetMap.keySet().toArray(new String[0])));
+				addChannelSetItemsOnSpinner(Arrays.asList(mChannelSetMap.keySet().toArray(new String[0])));
 				
 				
 				break;
@@ -225,19 +262,27 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	public void addKeysetItemsOnSpinner(List<String> keysets) {
 		mKeysetSpinner = (Spinner) findViewById(R.id.keyset_spinner);
 		
-		mKeysetAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, keysets);
+		//add list to a new initialized list, else elements are not removable from adapter later
+		List<String> keysetList = new ArrayList<String>();
+		keysetList.addAll(keysets);
+		
+		mKeysetAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, keysetList);
 		mKeysetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		mKeysetSpinner.setAdapter(mKeysetAdapter);
-
+		mKeysetAdapter.notifyDataSetChanged();
 	}
 	
-	public void addChannelSetItemsOnSpinner(List<String> keysets) {
+	public void addChannelSetItemsOnSpinner(List<String> channelSets) {
 		mChannelSpinner = (Spinner) findViewById(R.id.channel_spinner);
 		
-		mChannelSetAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, keysets);
+		//add list to a new initialized list, else elements are not removable from adapter later
+		List<String> channelSetList = new ArrayList<String>();
+		channelSetList.addAll(channelSets);
+		
+		mChannelSetAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, channelSetList);
 		mChannelSetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		mChannelSpinner.setAdapter(mKeysetAdapter);
-
+		mChannelSpinner.setAdapter(mChannelSetAdapter);
+		mChannelSetAdapter.notifyDataSetChanged();
 	}
 
 	// add items into spinner dynamically
@@ -335,7 +380,12 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		source.close();
 		addKeysetItemsOnSpinner(Arrays.asList(mKeysetMap.keySet().toArray(new String[0])));
 		
-		addChannelSetItemsOnSpinner(mChannelSets);
+		
+		ChannelSetDataSource channelSource = new ChannelSetDataSource(MainActivity.this);
+		channelSource.open();
+		mChannelSetMap = channelSource.getChannelSets((String) mReaderSpinner.getSelectedItem());
+		channelSource.close();
+		addChannelSetItemsOnSpinner(Arrays.asList(mChannelSetMap.keySet().toArray(new String[0])));
 	}
 
 	private void performCommand(APDU_COMMAND _cmd, int _seekReader) {

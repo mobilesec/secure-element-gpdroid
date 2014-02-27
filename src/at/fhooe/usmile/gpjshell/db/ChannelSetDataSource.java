@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 import at.fhooe.usmile.gpjshell.objects.GPChannelSet;
 
 public class ChannelSetDataSource {
@@ -38,9 +39,9 @@ public class ChannelSetDataSource {
 		values.put(DatabaseConnection.COLUMN7_CHANNEL_STRING_NAME, channelSet.getChannelNameString());
 		
 		if(mDatabase.query(DatabaseConnection.TABLE_CHANNELSET, new String[]{DatabaseConnection.COLUMN2_CHANNEL_ID}, DatabaseConnection.COLUMN2_CHANNEL_ID + "='" + channelSet.getChannelId() +"'", null, null, null, null).getCount() > 0)
-			mDatabase.update(DatabaseConnection.TABLE_CHANNELSET, values, DatabaseConnection.COLUMN1_KEYSET_ID + "='" + channelSet.getChannelId() +"'", null);
+			Log.i("channels updated: ", "" + mDatabase.update(DatabaseConnection.TABLE_CHANNELSET, values, DatabaseConnection.COLUMN2_CHANNEL_ID + "='" + channelSet.getChannelId() + "'", null));
 		else
-			mDatabase.insert(DatabaseConnection.TABLE_CHANNELSET, null, values);
+			Log.i("channel inserted at row: ", "" + mDatabase.insert(DatabaseConnection.TABLE_CHANNELSET, null, values));
 	}
 	
 	public Map<String, GPChannelSet> getChannelSets(){
@@ -89,7 +90,7 @@ public class ChannelSetDataSource {
 	
 	
 	public int remove(int id){
-		return mDatabase.delete(DatabaseConnection.TABLE_CHANNELSET, DatabaseConnection.COLUMN2_CHANNEL_ID + "=" + id, null);
+		return mDatabase.delete(DatabaseConnection.TABLE_CHANNELSET, DatabaseConnection.COLUMN2_CHANNEL_ID + "='" + id + "'", null);
 	}
 	
 	

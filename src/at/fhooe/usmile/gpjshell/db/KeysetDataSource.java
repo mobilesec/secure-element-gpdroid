@@ -81,8 +81,8 @@ public class KeysetDataSource {
 		return keysets;
 	}
 	
-	public int remove(String id){
-		return mDatabase.delete(DatabaseConnection.TABLE_KEYSETS, DatabaseConnection.COLUMN1_KEYSET_ID + "=" + id, null);
+	public int remove(int id){
+		return mDatabase.delete(DatabaseConnection.TABLE_KEYSETS, DatabaseConnection.COLUMN1_KEYSET_ID + "='" + id + "'", null);
 	}
 	
 	
