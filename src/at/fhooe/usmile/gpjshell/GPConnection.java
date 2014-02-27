@@ -18,6 +18,8 @@ import net.sourceforge.gpj.cardservices.exceptions.GPInstallForLoadException;
 import net.sourceforge.gpj.cardservices.exceptions.GPLoadException;
 import net.sourceforge.gpj.cardservices.exceptions.GPSecurityDomainSelectionException;
 import android.util.Log;
+import at.fhooe.usmile.gpjshell.objects.GPAppletData;
+import at.fhooe.usmile.gpjshell.objects.GPKeyset;
 
 public class GPConnection {
 
@@ -88,6 +90,13 @@ public class GPConnection {
 		mGPService.setKeys(SD_KEY_ID, SD_SE_KEYS, SD_SE_KEYS, SD_SE_KEYS);
 		mGPService.setKeys(I2C_KEY_ID, SD_SE_KEYS, SD_SE_KEYS, SD_SE_KEYS);
 		
+//		mGPService.setKeys(UICC_KEY_ID, UICC_SE_KEY_ENC, UICC_SE_KEY_MAC,
+//					UICC_SE_KEY_KEK);
+	}
+	
+	public void initializeKeys(CardChannel channel, GPKeyset keyset) {
+		mGPService = new GlobalPlatformService(channel);
+		mGPService.setKeys(keyset.getID(), keyset.getENCByte(), keyset.getMACByte(), keyset.getKEKByte());
 //		mGPService.setKeys(UICC_KEY_ID, UICC_SE_KEY_ENC, UICC_SE_KEY_MAC,
 //					UICC_SE_KEY_KEK);
 	}

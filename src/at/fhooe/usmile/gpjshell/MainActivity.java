@@ -3,7 +3,9 @@ package at.fhooe.usmile.gpjshell;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import javax.smartcardio.Card;
 import javax.smartcardio.CardChannel;
@@ -32,20 +34,28 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
+import at.fhooe.usmile.gpjshell.db.KeysetDataSource;
+import at.fhooe.usmile.gpjshell.objects.GPAppletData;
+import at.fhooe.usmile.gpjshell.objects.GPKeyset;
 
 public class MainActivity extends Activity implements SEService.CallBack,
 		TCPFileResultListener {
 
 	private final static String LOG_TAG = "GPJShell";
-	private final static int ACTIVITYRESULT_FILESELECTED = 101;
+	public final static int ACTIVITYRESULT_FILESELECTED = 101;
+	public final static int ACTIVITYRESULT_KEYSET_SET = 102;
 	private TextView mLog;
 
 	private Spinner mReaderSpinner = null;
+	private Spinner mKeysetSpinner = null;
 	private Button buttonConnect = null;
+	private Button mButtonAddKeyset = null;
 
 	private static LogMe MAIN_Log;
 
@@ -53,6 +63,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	private Button buttonListApplet, buttonSelectApplet;
 
 	private TCPConnection mTCPConnection = null;
+	private ArrayAdapter<String> mKeysetAdapter;
 
 	public enum APDU_COMMAND {
 		APDU_INSTALL, APDU_DELETE, APDU_LISTAPPLETS, APDU_SELECT, APDU_SEND
@@ -60,6 +71,8 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	private String mAppletUrl = null;
 	private TextView mFileNameView = null;
+	private List<String> mKeysets = null;
+	private Map<String, GPKeyset> mKeysetMap = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -71,9 +84,20 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		// layout.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT,
 		// LayoutParams.WRAP_CONTENT));
 		// layout.setOrientation(1);
+		
+
 
 		mFileNameView = (TextView) findViewById(R.id.text1);
-
+		mButtonAddKeyset = (Button) findViewById(R.id.btn_add_keyset);
+		mButtonAddKeyset.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(MainActivity.this, AddKeysetActivity.class);
+				startActivityForResult(intent, ACTIVITYRESULT_KEYSET_SET);
+			}
+		});
+		
 		loadPreferences();
 
 		mLog = (TextView) findViewById(R.id.log);
@@ -83,12 +107,16 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		GlobalPlatformService.usage();
 
 		mTerminal = new OpenMobileAPITerminal(this, this);
+		
+
 
 		mTCPConnection = new TCPConnection(this, this);
 		Thread td = new Thread(mTCPConnection);
 		td.start();
 
 	}
+
+	
 
 	private void loadPreferences() {
 
@@ -122,8 +150,9 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 		MAIN_Log.d(LOG_TAG, "Resultcode " + _resultCode);
 		if (_resultCode == Activity.RESULT_OK) {
-
-			if (_requestCode == ACTIVITYRESULT_FILESELECTED) {
+			
+			switch (_requestCode) {
+			case ACTIVITYRESULT_FILESELECTED:
 				Uri uri = _data.getData();
 				MAIN_Log.d(LOG_TAG, "File Uri: " + uri.toString());
 				mAppletUrl = uri.toString();
@@ -133,6 +162,28 @@ public class MainActivity extends Activity implements SEService.CallBack,
 				mFileNameView.setText(uri.getLastPathSegment());
 				// performCommand(APDU_COMMAND.APDU_INSTALL,
 				// mReaderSpinner.getSelectedItemPosition(), uri.toString());
+				break;
+
+			case ACTIVITYRESULT_KEYSET_SET:
+				GPKeyset keyset = (GPKeyset) _data.getExtras().get(GPKeyset.KEYSET);
+				//need to set reader to keyset
+				keyset.setReaderName((String) mReaderSpinner.getSelectedItem()); 
+				
+				KeysetDataSource source = new KeysetDataSource(this);
+				
+				source.open();
+				source.insertKeyset(keyset);
+				mKeysetMap = source.getKeysets((String) mReaderSpinner.getSelectedItem());
+				source.close();
+				
+//				mKeysetAdapter.add(keyset.getName());
+				
+				List<String> keysets = Arrays.asList(mKeysetMap.keySet().toArray(new String[0]));
+				addKeysetItemsOnSpinner(keysets);
+				
+				break;
+			default:
+				break;
 			}
 		} else if (_resultCode == Activity.RESULT_CANCELED) {
 			MAIN_Log.d(LOG_TAG, "file not selected");
@@ -140,23 +191,28 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	}
 	
-	
+	public void addKeysetItemsOnSpinner(List<String> keysets) {
+		mKeysetSpinner = (Spinner) findViewById(R.id.keyset_spinner);
+		
+		mKeysetAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, keysets);
+		mKeysetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mKeysetSpinner.setAdapter(mKeysetAdapter);
+
+	}
+
 	// add items into spinner dynamically
 	public void addReaderItemsOnSpinner(Reader[] _readers) {
 
-		for (Reader reader : _readers) {
-			log().d(LOG_TAG, reader.getName());			
-		}
-		
 		mReaderSpinner = (Spinner) findViewById(R.id.reader_spinner);
-		buttonConnect = (Button) findViewById(R.id.button1);
-		buttonListApplet = (Button) findViewById(R.id.button2);
+		buttonConnect = (Button) findViewById(R.id.btn_addkeyset_positive);
+		buttonListApplet = (Button) findViewById(R.id.btn_addkeyset_negative);
 		buttonSelectApplet = (Button) findViewById(R.id.button3);
 
 		if (mReaderSpinner != null) {
 			List<String> list = new ArrayList<String>();
 			for (int i = 0; i < _readers.length; i++) {
 				Reader reader = _readers[i];
+
 				list.add(reader.getName());
 			}
 			ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
@@ -164,6 +220,26 @@ public class MainActivity extends Activity implements SEService.CallBack,
 			dataAdapter
 					.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 			mReaderSpinner.setAdapter(dataAdapter);
+			
+			//refresh keyset spinner when new reader is selected
+			mReaderSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+				@Override
+				public void onItemSelected(AdapterView<?> arg0, View arg1,
+						int arg2, long arg3) {
+					KeysetDataSource source = new KeysetDataSource(MainActivity.this);
+					source.open();
+					mKeysetMap = source.getKeysets((String) mReaderSpinner.getSelectedItem());
+					source.close();
+					addKeysetItemsOnSpinner(Arrays.asList(mKeysetMap.keySet().toArray(new String[0])));
+				}
+
+				@Override
+				public void onNothingSelected(AdapterView<?> arg0) {
+					// TODO Auto-generated method stub
+					
+				}
+			});
 
 			buttonConnect.setOnClickListener(new OnClickListener() {
 
@@ -207,6 +283,12 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	public void serviceConnected(SEService arg0) {
 		addReaderItemsOnSpinner(mTerminal.getReaders());
+		KeysetDataSource source = new KeysetDataSource(this);
+		source.open();
+		mKeysetMap = source.getKeysets((String) mReaderSpinner.getSelectedItem());
+		mKeysets = Arrays.asList(mKeysetMap.keySet().toArray(new String[0]));
+		source.close();
+		addKeysetItemsOnSpinner(mKeysets);
 	}
 
 	private void performCommand(APDU_COMMAND _cmd, int _seekReader) {
@@ -215,6 +297,8 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	private void performCommand(APDU_COMMAND _cmd, int _seekReader,
 			Object _param) {
+		GPKeyset keyset = mKeysetMap.get((String) mKeysetSpinner.getSelectedItem());
+		
 		try {
 			Card c = null;
 			try {
@@ -239,8 +323,8 @@ public class MainActivity extends Activity implements SEService.CallBack,
 						+ GPUtil.byteArrayToString(c.getATR().getBytes()));
 			}
 			CardChannel channel = c.openLogicalChannel();
-
-			GPConnection.getInstance().initializeKeys(channel);
+			
+			GPConnection.getInstance().initializeKeys(channel, keyset);
 			GPConnection.getInstance().open();
 
 			MAIN_Log.d(LOG_TAG,
@@ -319,7 +403,6 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	}
 
 	private void listApplets() throws CardException {
-		GPConnection.getInstance().openSecureChannel();
 		GPAppletData mApplets = GPConnection.getInstance()
 				.loadAppletsfromCard();
 		Intent intent = new Intent(this, AppletListActivity.class);
@@ -332,14 +415,13 @@ public class MainActivity extends Activity implements SEService.CallBack,
 						+ mApplets.getRegistry().allPackages().size()
 						+ " Applets.");
 
-
-//		GPConnection.getInstance().openSecureChannel();
-
+		// listAppletsToLog();
 	}
 
-	private void listAppletsToLog(AIDRegistry _registry) throws CardException {
+	private void listAppletsToLog() throws CardException {
 
-		for (AIDRegistryEntry e : _registry) {
+		AIDRegistry registry = GPConnection.getInstance().getRegistry();
+		for (AIDRegistryEntry e : registry) {
 			AID aid = e.getAID();
 			int numSpaces = (15 - aid.getLength());
 			String spaces = "";

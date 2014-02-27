@@ -1,4 +1,4 @@
-package at.fhooe.usmile.gpjshell;
+package at.fhooe.usmile.gpjshell.objects;
 
 import net.sourceforge.gpj.cardservices.AIDRegistry;
 import net.sourceforge.gpj.cardservices.AIDRegistryEntry;

@@ -65,7 +65,7 @@ public class TCPConnection implements Runnable {
 				fs.close();
 				sendLogOutput("File received");
 
-				(output).println("Good bye and thanks for all the fish :)");
+				output.println("Good bye and thanks for all the fish :)");
 				s.close();
 
 				mMainContext.runOnUiThread(new Runnable() {
