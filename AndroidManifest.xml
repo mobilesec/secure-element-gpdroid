@@ -10,7 +10,7 @@
 
     <!--
           <uses-permission android:name="org.simalliance.openmobileapi.SMARTCARD" >
-    </uses-permission>
+    </uses-permission>
     -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -25,7 +25,7 @@
         <!--
              <uses-library
             android:name="org.simalliance.openmobileapi"
-            android:required="true" />
+            android:required="true" />
         -->
         <activity
             android:name="at.fhooe.usmile.gpjshell.MainActivity"
@@ -45,8 +45,13 @@
         </activity>
         <activity
             android:name="at.fhooe.usmile.gpjshell.AddKeysetActivity"
-            android:label="@string/title_activity_add_keyset" 
-            android:theme="@android:style/Theme.Dialog">
+            android:label="@string/title_activity_add_keyset"
+            android:theme="@android:style/Theme.Dialog" >
+        </activity>
+        <activity
+            android:name="at.fhooe.usmile.gpjshell.AddChannelSetActivity"
+            android:label="@string/title_activity_add_channel_set"
+            android:theme="@android:style/Theme.Dialog" >
         </activity>
     </application>
 

@@ -40,8 +40,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
+import at.fhooe.usmile.gpjshell.db.ChannelSetDataSource;
 import at.fhooe.usmile.gpjshell.db.KeysetDataSource;
 import at.fhooe.usmile.gpjshell.objects.GPAppletData;
+import at.fhooe.usmile.gpjshell.objects.GPChannelSet;
 import at.fhooe.usmile.gpjshell.objects.GPKeyset;
 
 public class MainActivity extends Activity implements SEService.CallBack,
@@ -50,12 +52,17 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	private final static String LOG_TAG = "GPJShell";
 	public final static int ACTIVITYRESULT_FILESELECTED = 101;
 	public final static int ACTIVITYRESULT_KEYSET_SET = 102;
+	public final static int ACTIVITYRESULT_CHANNEL_SET = 103;
 	private TextView mLog;
 
+	
+	//UI Elements
 	private Spinner mReaderSpinner = null;
 	private Spinner mKeysetSpinner = null;
+	private Spinner mChannelSpinner = null;
 	private Button buttonConnect = null;
 	private Button mButtonAddKeyset = null;
+	private Button mButtonAddChannelSet = null;
 
 	private static LogMe MAIN_Log;
 
@@ -64,6 +71,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	private TCPConnection mTCPConnection = null;
 	private ArrayAdapter<String> mKeysetAdapter;
+	private ArrayAdapter<String> mChannelSetAdapter;
 
 	public enum APDU_COMMAND {
 		APDU_INSTALL, APDU_DELETE, APDU_LISTAPPLETS, APDU_SELECT, APDU_SEND
@@ -71,8 +79,9 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	private String mAppletUrl = null;
 	private TextView mFileNameView = null;
-	private List<String> mKeysets = null;
 	private Map<String, GPKeyset> mKeysetMap = null;
+	private List<String> mChannelSets = null;
+	private Map<String, GPChannelSet> mChannelSetMap = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +107,16 @@ public class MainActivity extends Activity implements SEService.CallBack,
 			}
 		});
 		
+		mButtonAddChannelSet = (Button) findViewById(R.id.btn_add_channelset);
+		mButtonAddChannelSet.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(MainActivity.this, AddChannelSetActivity.class);
+				startActivityForResult(intent, ACTIVITYRESULT_CHANNEL_SET);
+			}
+		});
+		
 		loadPreferences();
 
 		mLog = (TextView) findViewById(R.id.log);
@@ -115,8 +134,6 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		td.start();
 
 	}
-
-	
 
 	private void loadPreferences() {
 
@@ -166,20 +183,33 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 			case ACTIVITYRESULT_KEYSET_SET:
 				GPKeyset keyset = (GPKeyset) _data.getExtras().get(GPKeyset.KEYSET);
-				//need to set reader to keyset
+				//set actual reader to keyset
 				keyset.setReaderName((String) mReaderSpinner.getSelectedItem()); 
 				
-				KeysetDataSource source = new KeysetDataSource(this);
+				KeysetDataSource keySource = new KeysetDataSource(this);
 				
-				source.open();
-				source.insertKeyset(keyset);
-				mKeysetMap = source.getKeysets((String) mReaderSpinner.getSelectedItem());
-				source.close();
+				keySource.open();
+				keySource.insertKeyset(keyset);
+				mKeysetMap = keySource.getKeysets((String) mReaderSpinner.getSelectedItem());
+				keySource.close();
 				
-//				mKeysetAdapter.add(keyset.getName());
+				addKeysetItemsOnSpinner(Arrays.asList(mKeysetMap.keySet().toArray(new String[0])));
 				
-				List<String> keysets = Arrays.asList(mKeysetMap.keySet().toArray(new String[0]));
-				addKeysetItemsOnSpinner(keysets);
+				break;
+				
+			case ACTIVITYRESULT_CHANNEL_SET:
+				GPChannelSet channel = (GPChannelSet) _data.getExtras().get(GPChannelSet.CHANNEL_SET);
+				channel.setReaderName((String) mReaderSpinner.getSelectedItem()); 
+				
+				ChannelSetDataSource channelSource = new ChannelSetDataSource(this);
+				
+				channelSource.open();
+				channelSource.insertChannelSet(channel);
+				mChannelSetMap = channelSource.getChannelSets();
+				channelSource.close();
+				
+				addKeysetItemsOnSpinner(Arrays.asList(mKeysetMap.keySet().toArray(new String[0])));
+				
 				
 				break;
 			default:
@@ -198,6 +228,15 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		mKeysetAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, keysets);
 		mKeysetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		mKeysetSpinner.setAdapter(mKeysetAdapter);
+
+	}
+	
+	public void addChannelSetItemsOnSpinner(List<String> keysets) {
+		mChannelSpinner = (Spinner) findViewById(R.id.channel_spinner);
+		
+		mChannelSetAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, keysets);
+		mChannelSetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mChannelSpinner.setAdapter(mKeysetAdapter);
 
 	}
 
@@ -233,14 +272,20 @@ public class MainActivity extends Activity implements SEService.CallBack,
 					mKeysetMap = source.getKeysets((String) mReaderSpinner.getSelectedItem());
 					source.close();
 					addKeysetItemsOnSpinner(Arrays.asList(mKeysetMap.keySet().toArray(new String[0])));
+					
+					ChannelSetDataSource channelSource = new ChannelSetDataSource(MainActivity.this);
+					channelSource.open();
+					mChannelSetMap = channelSource.getChannelSets((String) mReaderSpinner.getSelectedItem());
+					channelSource.close();
+					addChannelSetItemsOnSpinner(Arrays.asList(mChannelSetMap.keySet().toArray(new String[0])));
 				}
 
 				@Override
 				public void onNothingSelected(AdapterView<?> arg0) {
-					// TODO Auto-generated method stub
-					
 				}
 			});
+			
+			//TODO: add channelselection
 
 			buttonConnect.setOnClickListener(new OnClickListener() {
 
@@ -287,9 +332,10 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		KeysetDataSource source = new KeysetDataSource(this);
 		source.open();
 		mKeysetMap = source.getKeysets((String) mReaderSpinner.getSelectedItem());
-		mKeysets = Arrays.asList(mKeysetMap.keySet().toArray(new String[0]));
 		source.close();
-		addKeysetItemsOnSpinner(mKeysets);
+		addKeysetItemsOnSpinner(Arrays.asList(mKeysetMap.keySet().toArray(new String[0])));
+		
+		addChannelSetItemsOnSpinner(mChannelSets);
 	}
 
 	private void performCommand(APDU_COMMAND _cmd, int _seekReader) {
@@ -299,6 +345,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	private void performCommand(APDU_COMMAND _cmd, int _seekReader,
 			Object _param) {
 		GPKeyset keyset = mKeysetMap.get((String) mKeysetSpinner.getSelectedItem());
+		GPChannelSet channelSet = mChannelSetMap.get((String) mChannelSpinner.getSelectedItem());
 		
 		try {
 			Card c = null;
@@ -331,8 +378,11 @@ public class MainActivity extends Activity implements SEService.CallBack,
 			MAIN_Log.d(LOG_TAG,
 					"GPShell finished opening OpenMobileAPI Terminal");
 
-			GPConnection.getInstance().openSecureChannel(
-					(String) mReaderSpinner.getSelectedItem());
+			GPConnection.getInstance().openSecureChannel(channelSet.getChannelSet(),
+					channelSet.getChannelId(),
+					channelSet.getScpVersion(),
+					channelSet.getSecurityLevel(),
+					channelSet.isGemalto());
 
 			MAIN_Log.d(LOG_TAG, "Secure channel opened");
 
