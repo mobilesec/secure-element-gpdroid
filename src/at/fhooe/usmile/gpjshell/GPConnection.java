@@ -85,6 +85,10 @@ public class GPConnection {
 		mGPService.deleteAID(data.getSelectedApplet().getAID(), true);
 	}
 
+	/**
+	 * TODO : that should be removed
+	 * @param channel
+	 */
 	public void initializeKeys(CardChannel channel) {
 		mGPService = new GlobalPlatformService(channel);
 		mGPService.setKeys(SD_KEY_ID, SD_SE_KEYS, SD_SE_KEYS, SD_SE_KEYS);
@@ -116,6 +120,9 @@ public class GPConnection {
 	
 	public void openSecureChannel(String _readerName) throws IllegalArgumentException, CardException {
 		mLastReaderName=_readerName;
+		/** 
+		 * TODO: use key from setting
+		 */
 		if(_readerName.equals(READER_UICC) || _readerName.equals(READER_UICC2)){
 			mGPService.openSecureChannel(UICC_KEY_ID, UICC_KEY_ID, GlobalPlatformService.SCP_02_15, 3, true);
 		} else if(_readerName.equals(READER_SDDEVICEFIDELITY)){

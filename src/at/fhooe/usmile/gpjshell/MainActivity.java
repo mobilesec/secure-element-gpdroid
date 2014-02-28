@@ -111,11 +111,23 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 
 		mTCPConnection = new TCPConnection(this, this);
-		Thread td = new Thread(mTCPConnection);
-		td.start();
 
 	}
 
+	@Override
+	protected void onResume() {
+		super.onResume();
+		Thread td = new Thread(mTCPConnection);
+		td.start();
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		if(mTCPConnection!=null){
+			mTCPConnection.stopConnection();
+		}
+	}
 	
 
 	private void loadPreferences() {

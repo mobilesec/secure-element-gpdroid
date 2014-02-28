@@ -11,9 +11,12 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 import android.app.Activity;
+import android.util.Log;
 
 public class TCPConnection implements Runnable {
 
@@ -23,6 +26,7 @@ public class TCPConnection implements Runnable {
 	private static final String TCP_TEMP_CAP_DIRECTORY = "/tcpapplets/";
 	private Activity mMainContext;
 	private TCPFileResultListener mListener;
+	private ServerSocket mServerSocket;
 
 	public TCPConnection(Activity _context, TCPFileResultListener _listener) {
 		mMainContext = _context;
@@ -31,6 +35,14 @@ public class TCPConnection implements Runnable {
 
 	public void stopConnection() {
 		mRunning = false;
+		if(mServerSocket!=null){
+			try {
+				mServerSocket.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+				sendLogOutput("IOException, could not close connection" +e.getMessage());
+			}
+		}
 	}
 
 	@Override
@@ -40,11 +52,11 @@ public class TCPConnection implements Runnable {
 		try {
 			Boolean end = false;
 			int u;
-			ServerSocket ss = new ServerSocket(TCP_ADB_PORT);
+			mServerSocket = new ServerSocket(TCP_ADB_PORT);
 
 			while (!end) {
 				// Server is waiting for client here, if needed
-				Socket s = ss.accept();
+				Socket s = mServerSocket.accept();
 				// receive file
 				byte[] jj = new byte[1024];
 				InputStream is = s.getInputStream();
@@ -80,16 +92,20 @@ public class TCPConnection implements Runnable {
 					end = true;
 				}
 			}
-			ss.close();
+//			mServerSocket.close();
 
-		} catch (UnknownHostException e) {
+		} 
+		catch (SocketException e) {
+			Log.d("SocketException", e.getMessage());
+	    }
+		catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			sendLogOutput(e.getMessage());
+			sendLogOutput("UnknownHostException" +e.getMessage());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			sendLogOutput(e.getMessage());
+			sendLogOutput("IOException " +e.getMessage());
 		}
 
 	}
