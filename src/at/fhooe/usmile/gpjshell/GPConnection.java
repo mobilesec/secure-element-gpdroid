@@ -133,6 +133,10 @@ public class GPConnection {
 		}
 	}
 	
+	public void openSecureChannel(int keySet, int keyId, int scpVersion, int securityLevel, boolean gemalto) throws IllegalArgumentException, CardException {
+		mGPService.openSecureChannel(keySet, keyId, scpVersion, securityLevel, gemalto);
+	}
+	
 
 	public void installCapFile(String _appletUrl) throws IOException, MalformedURLException, GPInstallForLoadException, GPLoadException, CardException {
 		CapFile cpFile = new CapFile(new URL(_appletUrl).openStream(), null);

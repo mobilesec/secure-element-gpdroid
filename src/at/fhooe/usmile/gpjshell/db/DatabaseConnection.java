@@ -13,6 +13,8 @@ import android.util.Log;
  * 
  */
 public class DatabaseConnection extends SQLiteOpenHelper {
+	
+	//Data for Keyset
 	public static final String TABLE_KEYSETS = "keysets";
 	public static final String COLUMN_ID = "_id";
 	public static final String COLUMN1_KEYSET_ID = "keysetid";
@@ -23,12 +25,22 @@ public class DatabaseConnection extends SQLiteOpenHelper {
 	public static final String COLUMN6_NAME = "name";
 	public static final String COLUMN7_READER = "reader";
 	
+	//Data for secure Channel
+	public static final String TABLE_CHANNELSET = "channelset";
+	public static final String COLUMN_CH_ID = "_id";
+	public static final String COLUMN1_CHANNEL_NAME = "channelname";
+	public static final String COLUMN2_CHANNEL_ID= "channelid";
+	public static final String COLUMN3_CHANNEL_VERSION = "scpversion";
+	public static final String COLUMN4_SECURITY_LEVEL = "securitylevel";
+	public static final String COLUMN5_GEMALTO = "gemalto";
+	public static final String COLUMN6_CHANNEL_READER = "reader";
+	public static final String COLUMN7_CHANNEL_STRING_NAME = "stringname";
 	
 	public static final String DB_NAME = "GPDroid_DB";
 	private static final int VERSION = 1;
 
 	// contains sql command to create the database
-	private static final String DB_CREATE = "create table " + TABLE_KEYSETS
+	private static final String DB_CREATE_KEYSET = "create table " + TABLE_KEYSETS
 			+ "(" + COLUMN_ID + " integer primary key autoincrement, "
 			+ COLUMN1_KEYSET_ID + " INTEGER not null,"
 			+ COLUMN2_VERSION + " INTEGER, "
@@ -37,7 +49,16 @@ public class DatabaseConnection extends SQLiteOpenHelper {
 			+ COLUMN5_KEK + " TEXT, "
 			+ COLUMN6_NAME + " TEXT, "
 			+ COLUMN7_READER + " TEXT);";
-
+	
+	private static final String DB_CREATE_CHANNEL = "create table " + TABLE_CHANNELSET
+			+ "(" + COLUMN_CH_ID + " integer primary key autoincrement, "
+			+ COLUMN1_CHANNEL_NAME + " INTEGER not null,"
+			+ COLUMN2_CHANNEL_ID + " INTEGER, "
+			+ COLUMN3_CHANNEL_VERSION + " INTEGER, "
+			+ COLUMN4_SECURITY_LEVEL + " INTEGER, "
+			+ COLUMN5_GEMALTO + " BOOL, "
+			+ COLUMN6_CHANNEL_READER + " TEXT, "
+			+ COLUMN7_CHANNEL_STRING_NAME + " TEXT);";
 	/**
 	 * Instantiates a DataBaseConnection object by calling super constructor.
 	 * 
@@ -49,7 +70,8 @@ public class DatabaseConnection extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {
-		db.execSQL(DB_CREATE);
+		db.execSQL(DB_CREATE_KEYSET);
+		db.execSQL(DB_CREATE_CHANNEL);
 	}
 
 	@Override
