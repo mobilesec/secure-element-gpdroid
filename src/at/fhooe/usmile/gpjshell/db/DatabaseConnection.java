@@ -28,13 +28,10 @@ public class DatabaseConnection extends SQLiteOpenHelper {
 	//Data for secure Channel
 	public static final String TABLE_CHANNELSET = "channelset";
 	public static final String COLUMN_CH_ID = "_id";
-	public static final String COLUMN1_CHANNEL_NAME = "channelname";
-	public static final String COLUMN2_CHANNEL_ID= "channelid";
-	public static final String COLUMN3_CHANNEL_VERSION = "scpversion";
-	public static final String COLUMN4_SECURITY_LEVEL = "securitylevel";
-	public static final String COLUMN5_GEMALTO = "gemalto";
-	public static final String COLUMN6_CHANNEL_READER = "reader";
-	public static final String COLUMN7_CHANNEL_STRING_NAME = "stringname";
+	public static final String COLUMN1_CHANNEL_STRING_NAME = "stringname";
+	public static final String COLUMN2_CHANNEL_SCPVERSION = "scpversion";
+	public static final String COLUMN3_SECURITY_LEVEL = "securitylevel";
+	public static final String COLUMN4_GEMALTO = "gemalto";
 	
 	public static final String DB_NAME = "GPDroid_DB";
 	private static final int VERSION = 1;
@@ -52,13 +49,10 @@ public class DatabaseConnection extends SQLiteOpenHelper {
 	
 	private static final String DB_CREATE_CHANNEL = "create table " + TABLE_CHANNELSET
 			+ "(" + COLUMN_CH_ID + " integer primary key autoincrement, "
-			+ COLUMN1_CHANNEL_NAME + " INTEGER not null,"
-			+ COLUMN2_CHANNEL_ID + " INTEGER, "
-			+ COLUMN3_CHANNEL_VERSION + " INTEGER, "
-			+ COLUMN4_SECURITY_LEVEL + " INTEGER, "
-			+ COLUMN5_GEMALTO + " BOOL, "
-			+ COLUMN6_CHANNEL_READER + " TEXT, "
-			+ COLUMN7_CHANNEL_STRING_NAME + " TEXT);";
+			+ COLUMN2_CHANNEL_SCPVERSION + " INTEGER, "
+			+ COLUMN3_SECURITY_LEVEL + " INTEGER, "
+			+ COLUMN4_GEMALTO + " BOOL, "
+			+ COLUMN1_CHANNEL_STRING_NAME + " TEXT);";
 	/**
 	 * Instantiates a DataBaseConnection object by calling super constructor.
 	 * 

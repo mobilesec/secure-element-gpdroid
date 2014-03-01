@@ -2,6 +2,8 @@ package at.fhooe.usmile.gpjshell.objects;
 
 import java.io.Serializable;
 
+import at.fhooe.usmile.gpjshell.GPUtils;
+
 public class GPKeyset implements Serializable{
 	/**
 	 * 
@@ -10,6 +12,7 @@ public class GPKeyset implements Serializable{
 	
 	public static final String KEYSET = "keyset";
 	
+	private int uniqueID;
 	private int ID;
 	private int version;
 	private String name;
@@ -18,31 +21,17 @@ public class GPKeyset implements Serializable{
 	private String KEK;
 	private String readerName;
 	
-	public GPKeyset(String name, int ID, int version, String MAC, String DEK, String KEK, String readerName) {
+	public GPKeyset(int uniqueID, String name, int ID, int version, String MAC, String DEK, String KEK, String readerName) {
 		this.ID = ID;
 		this.version = version;
-		this.setName(name);
+		this.setName(name + " - " + ID);
 		this.MAC = MAC;
 		this.ENC = DEK;
 		this.KEK = KEK;
 		this.setReaderName(readerName);
+		this.setUniqueID(uniqueID);
 	}
 	
-	public byte[] convertHexStringToByteArray(String string, String separator){
-		String[] stringBytes = string.split(separator);
-		byte[] bytes = new byte[stringBytes.length];
-		for (int i = 0; i < stringBytes.length; i++){
-			int index = stringBytes[i].indexOf("x");
-			bytes[i] = (byte) ((Character.digit(stringBytes[i].charAt(index+1), 16) << 4)
-                    + Character.digit(stringBytes[i].charAt(index+2), 16));
-		}
-		return bytes;
-	}
-	
-	public byte[] convertHexStringToByteArray(String string) {
-		return convertHexStringToByteArray(string, ",");
-	}
-
 	public int getID() {
 		return ID;
 	}
@@ -60,7 +49,7 @@ public class GPKeyset implements Serializable{
 	}
 
 	public byte[] getMACByte() {
-		return convertHexStringToByteArray(MAC);
+		return GPUtils.convertHexStringToByteArray(MAC);
 	}
 	
 	public String getMAC() {
@@ -76,7 +65,7 @@ public class GPKeyset implements Serializable{
 	}
 	
 	public byte[] getENCByte() {
-		return convertHexStringToByteArray(ENC);
+		return GPUtils.convertHexStringToByteArray(ENC);
 	}
 	
 	public void setENC(String eNC) {
@@ -88,7 +77,7 @@ public class GPKeyset implements Serializable{
 	}
 	
 	public byte[] getKEKByte() {
-		return convertHexStringToByteArray(KEK);
+		return GPUtils.convertHexStringToByteArray(KEK);
 	}
 
 	public void setKEK(String kEK) {
@@ -111,4 +100,11 @@ public class GPKeyset implements Serializable{
 		this.readerName = readerName;
 	}
 
+	public int getUniqueID() {
+		return uniqueID;
+	}
+
+	public void setUniqueID(int uniqueID) {
+		this.uniqueID = uniqueID;
+	}
 }

@@ -300,7 +300,7 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
      * @throws CardException
      *             if some communication problem is encountered.
      */
-    public void openSecureChannel(int keySet, int keyId, int scpVersion,
+    public void openSecureChannel(int keySet, int keyId, int keyVersion, int scpVersion,
             int securityLevel, boolean gemalto) throws IllegalArgumentException, CardException {
 
         if (scpVersion < SCP_ANY || scpVersion > SCP_02_1B) {
@@ -357,7 +357,7 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
         byte[] rand = new byte[8];
         new Random().nextBytes(rand);
 
-        CommandAPDU initUpdate = new CommandAPDU(CLA_GP, INIT_UPDATE, keySet,
+        CommandAPDU initUpdate = new CommandAPDU(CLA_GP, INIT_UPDATE, keyVersion,
                 keyId, rand);
 
         ResponseAPDU response = channel.transmit(initUpdate);
@@ -463,7 +463,7 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
         open();
         int keySet = 0;
         setKeys(keySet, defaultEncKey, defaultMacKey, defaultKekKey);
-        openSecureChannel(keySet, 0, SCP_ANY, APDU_MAC, false);
+        openSecureChannel(keySet, 0, 0, SCP_ANY, APDU_MAC, false);
     }
 
     public boolean isSecureChannelOpen() {
@@ -1658,7 +1658,7 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
                     if (loadSize + neededExtraSize > defaultLoadSize) {
                         loadSize -= neededExtraSize;
                     }
-                    service.openSecureChannel(keySet, 0,
+                    service.openSecureChannel(keySet, 0, 0,
                             GlobalPlatformService.SCP_ANY,
                             apduMode, gemalto);
 

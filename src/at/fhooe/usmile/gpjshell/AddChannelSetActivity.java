@@ -13,8 +13,6 @@ import at.fhooe.usmile.gpjshell.objects.GPChannelSet;
 public class AddChannelSetActivity extends Activity {
 
 	private EditText mEditName = null;
-	private EditText mEditId = null;
-	private EditText mEditSetName = null;
 	private EditText mEditScpVersion = null;
 	private EditText mEditSecurityLvl = null;
 	private CheckBox mGemalto = null;
@@ -28,8 +26,6 @@ public class AddChannelSetActivity extends Activity {
 		setContentView(R.layout.activity_add_channel_set);
 
 		mEditName = (EditText) findViewById(R.id.edit_channel_name);
-		mEditId = (EditText) findViewById(R.id.edit_channel_id);
-		mEditSetName = (EditText) findViewById(R.id.edit_channel_setname);
 		mEditScpVersion = (EditText) findViewById(R.id.edit_channel_version);
 		mEditSecurityLvl = (EditText) findViewById(R.id.edit_channel_security);
 		mGemalto = (CheckBox) findViewById(R.id.chkbx_gemalto);
@@ -42,12 +38,8 @@ public class AddChannelSetActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				GPChannelSet channel = new GPChannelSet();
-				if (mEditId.getText() != null) {
-					channel.setChannelId(Integer.valueOf(mEditId.getText().toString()));
-					if (mEditName.getText() != null)
-						channel.setChannelNameString(mEditName.getText().toString());
-					if (mEditSetName.getText() != null)
-						channel.setChannelSet(Integer.valueOf(mEditSetName.getText().toString()));
+				if (mEditName.getText() != null) {
+					channel.setChannelNameString(mEditName.getText().toString());
 					if (mEditScpVersion.getText() != null)
 						channel.setScpVersion(Integer.valueOf(mEditScpVersion.getText().toString()));
 					if (mEditSecurityLvl.getText() != null)
@@ -61,7 +53,7 @@ public class AddChannelSetActivity extends Activity {
 
 				} else {
 					Toast.makeText(AddChannelSetActivity.this,
-							"Please enter valid ID", Toast.LENGTH_LONG).show();
+							"Please enter valid name", Toast.LENGTH_LONG).show();
 				}
 			}
 		});
