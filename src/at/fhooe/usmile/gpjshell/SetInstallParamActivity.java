@@ -30,8 +30,8 @@ public class SetInstallParamActivity extends Activity {
 			public void onClick(View v) {
 				byte[] params = null;
 				byte privileges = 0;
-				if (mEditParams.getText() != null
-						&& mEditPrivileges.getText() != null) {
+				if (mEditParams.getText() != null && !mEditParams.getText().toString().equals("")
+						&& mEditPrivileges.getText() != null && !mEditPrivileges.getText().toString().equals("")) {
 					params = GPUtils.convertHexStringToByteArray(mEditParams
 							.getText().toString());
 					privileges = (byte)Integer.parseInt(mEditPrivileges
@@ -52,6 +52,9 @@ public class SetInstallParamActivity extends Activity {
 						setResult(RESULT_OK, intent);
 						finish();
 					}
+				} else {
+					setResult(RESULT_CANCELED);
+					finish();
 				}
 			}
 		});

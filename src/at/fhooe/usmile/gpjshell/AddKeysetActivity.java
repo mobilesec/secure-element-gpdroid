@@ -34,7 +34,7 @@ public class AddKeysetActivity extends Activity {
 		editENC = (EditText) findViewById(R.id.edit_keyset_enc);
 		editKEK = (EditText) findViewById(R.id.edit_keyset_kek);
 
-		mPositive = (Button) findViewById(R.id.btn_addkeyset_positive);
+		mPositive = (Button) findViewById(R.id.btn_install_applet);
 		mPositive.setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -73,7 +73,7 @@ public class AddKeysetActivity extends Activity {
 		
 		
 
-		mNegative = (Button) findViewById(R.id.btn_addkeyset_negative);
+		mNegative = (Button) findViewById(R.id.btn_list_applets);
 		mNegative.setOnClickListener(new View.OnClickListener() {
 
 			@Override

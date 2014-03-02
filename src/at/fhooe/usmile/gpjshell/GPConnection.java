@@ -6,6 +6,8 @@ import java.net.URL;
 
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
+import javax.smartcardio.CommandAPDU;
+import javax.smartcardio.ResponseAPDU;
 
 import net.sourceforge.gpj.cardservices.AID;
 import net.sourceforge.gpj.cardservices.AIDRegistry;
@@ -23,11 +25,11 @@ import at.fhooe.usmile.gpjshell.objects.GPKeyset;
 
 public class GPConnection {
 	private static final String LOG_TAG = "GPConnection";
-	
+
 	private static GPConnection _INSTANCE = null;
 	private GPAppletData data = null;
 	private GlobalPlatformService mGPService;
-	
+
 	public static GPConnection getInstance() {
 		synchronized (GPConnection.class) {
 			if (_INSTANCE == null) {
@@ -41,9 +43,6 @@ public class GPConnection {
 		data = new GPAppletData(null, -1);
 	}
 
-//	public void setRegistry(AIDRegistry _registry) {
-//		data.setRegistry(_registry);
-//	}
 
 	public AIDRegistry getRegistry() {
 		return data.getRegistry();
@@ -57,18 +56,25 @@ public class GPConnection {
 		return data.getSelectedApplet();
 	}
 
+	
 	public void deleteSelectedApplet() throws GPDeleteException, CardException {
-		if(data.getSelectedApplet().getKind()== Kind.IssuerSecurityDomain || data.getSelectedApplet().getKind() == Kind.SecurityDomain){
-			throw new CardException("Deleting Security domain currently not supported");
+		if (data.getSelectedApplet().getKind() == Kind.IssuerSecurityDomain
+				|| data.getSelectedApplet().getKind() == Kind.SecurityDomain) {
+			throw new CardException(
+					"Deleting Security domain currently not supported");
 		}
 		mGPService.deleteAID(data.getSelectedApplet().getAID(), true);
 	}
 
+	/**
+	 * initializes the keys for the smartcard to be used later. it uses a predefined keyset
+	 * @param channel 
+	 * @param keyset predefined keyset
+	 */
 	public void initializeKeys(CardChannel channel, GPKeyset keyset) {
 		mGPService = new GlobalPlatformService(channel);
-		mGPService.setKeys(keyset.getID(), keyset.getENCByte(), keyset.getMACByte(), keyset.getKEKByte());
-//		mGPService.setKeys(UICC_KEY_ID, UICC_SE_KEY_ENC, UICC_SE_KEY_MAC,
-//					UICC_SE_KEY_KEK);
+		mGPService.setKeys(keyset.getID(), keyset.getENCByte(),
+				keyset.getMACByte(), keyset.getKEKByte());
 	}
 
 	public void open() throws GPSecurityDomainSelectionException, CardException {
@@ -77,76 +83,68 @@ public class GPConnection {
 		mGPService.open();
 	}
 
-//	public void openSecureChannel() throws IllegalArgumentException, CardException {
-//		if(mLastReaderName == null){
-//			throw new IllegalArgumentException("No Reader selected");
-//		}
-//		openSecureChannel(mLastReaderName);
-//	}
-//	
-//	public void openSecureChannel(String _readerName) throws IllegalArgumentException, CardException {
-//		mLastReaderName=_readerName;
-//		if(_readerName.equals(READER_UICC)){
-//			mGPService.openSecureChannel(UICC_KEY_ID, 0, 0, 3, true);
-//		} else if(_readerName.equals(READER_SDDEVICEFIDELITY)){
-//			mGPService.openSecureChannel(SD_KEY_ID, 0, 0, 1, false);
-//		}
-//	}
-	
-	public void openSecureChannel(int uniqueIndex, int keyId, int keyVersion, int scpVersion, int securityLevel, boolean gemalto) throws IllegalArgumentException, CardException {
-		mGPService.openSecureChannel(uniqueIndex, keyId, keyVersion, scpVersion, securityLevel, gemalto);
+	/**
+	 * opens a secure channel with id from keyset and channel-settings
+	 * @param uniqueIndex - unique ID of keyset
+	 * @param keyId - keyID of keyset
+	 * @param keyVersion - version of keyset
+	 * @param scpVersion
+	 * @param securityLevel
+	 * @param gemalto
+	 * @throws IllegalArgumentException
+	 * @throws CardException
+	 */
+	public void openSecureChannel(int uniqueIndex, int keyId, int keyVersion,
+			int scpVersion, int securityLevel, boolean gemalto)
+			throws IllegalArgumentException, CardException {
+		mGPService.openSecureChannel(uniqueIndex, keyId, keyVersion,
+				scpVersion, securityLevel, gemalto);
+	}
+
+	public ResponseAPDU getData(CommandAPDU apdu) throws IllegalStateException, CardException {
+		return mGPService.transmit(apdu);
 	}
 	
 
-	public void installCapFile(String _appletUrl) throws IOException, MalformedURLException, GPInstallForLoadException, GPLoadException, CardException {
+	/**
+	 * Installs a selected cap-File (applet) to the smartcard. This method used
+	 * predefined parameters and privileges for installation
+	 * 
+	 * @param _appletUrl
+	 *            - url of the applet
+	 * @param params
+	 *            - install parameters
+	 * @param privileges
+	 *            - privileges used for installation
+	 * @throws IOException
+	 * @throws MalformedURLException
+	 * @throws GPInstallForLoadException
+	 * @throws GPLoadException
+	 * @throws CardException
+	 */
+	public void installCapFile(String _appletUrl, byte[] params, byte privileges)
+			throws IOException, MalformedURLException,
+			GPInstallForLoadException, GPLoadException, CardException {
 		CapFile cpFile = new CapFile(new URL(_appletUrl).openStream(), null);
-		
-		mGPService.loadCapFile(cpFile, false, false, 255-8, false, false);
+
+		mGPService.loadCapFile(cpFile, false, false, 255 - 8, true, false);
 
 		AID p = cpFile.getPackageAID();
-		Log.d(LOG_TAG, "Installing Applet with package AID "+p.toString());
-		
+		Log.d(LOG_TAG, "Installing Applet with package AID " + p.toString());
+
 		for (AID a : cpFile.getAppletAIDs()) {
-		    mGPService.installAndMakeSelecatable(p, a,
-		            null, (byte) 0,
-		            null, null);
+			mGPService.installAndMakeSelecatable(p, a, null, privileges,
+					params, null);
 
-			Log.d(LOG_TAG, "Finished installing applet. AID: "+ a.toString());
-		}
-	}
-	
-	public void installCapFile(String _appletUrl, byte[] params, byte privileges) throws IOException, MalformedURLException, GPInstallForLoadException, GPLoadException, CardException {
-		CapFile cpFile = new CapFile(new URL(_appletUrl).openStream(), null);
-		
-		mGPService.loadCapFile(cpFile, false, false, 255-8, true, false);
-
-		AID p = cpFile.getPackageAID();
-		Log.d(LOG_TAG, "Installing Applet with package AID "+p.toString());
-		
-		for (AID a : cpFile.getAppletAIDs()) {
-		    mGPService.installAndMakeSelecatable(p, a,
-		            null, privileges,
-		            params, null);
-
-			Log.d(LOG_TAG, "Finished installing applet. AID: "+ a.toString());
+			Log.d(LOG_TAG, "Finished installing applet. AID: " + a.toString());
 		}
 	}
 
 	public GPAppletData loadAppletsfromCard() throws CardException {
 		AIDRegistry registry = mGPService.getStatus();
-        
-        data.setRegistry(registry);
-        
-        return data;
-//        for (AIDRegistryEntry e : registry) {
-//        	AID aid = e.getAID();
-//            int numSpaces = (15 - aid.getLength());
-//            String spaces = "";
-//            String spaces2 = "";
-//            for (int i = 0; i < numSpaces; i++) {
-//                spaces = spaces + "   ";
-//                spaces2 = spaces2 + " ";
-//            }
-//        }
+
+		data.setRegistry(registry);
+
+		return data;
 	}
 }

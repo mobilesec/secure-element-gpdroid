@@ -10,6 +10,10 @@
     <!-- Main Activity -->
     <string name="main_descr_keyset">Keysets</string>
     <string name="main_descr_channel">Secure channel parameters</string>
+    <string name="btn_get_data">Get Data</string>
+    <string name="btn_list_applets">List Applets</string>
+    <string name="btn_choose_applet">Choose Applet</string>
+    <string name="btn_install_applet">Install Applet</string>
 
     <!-- addKeyset Activity -->
     <string name="title_activity_add_keyset">Please enter a new Keyset</string>
@@ -33,12 +37,19 @@
     <string name="channel_set">Set</string>
     <string name="channel_security">Security Level</string>
     <string name="channel_gemalto">is it gemalto?</string>
-    
-    
+
     <!-- Install Parameters Activity -->
     <string name="title_activity_set_install_param">SetInstallParamActivity</string>
     <string name="parameter_title">keep empty, if no parameters are needed</string>
-	<string name="parameter_text">enter parameters</string>
-	<string name="parameter_privileges">privileges (0-255)</string>
-	<string name="parameter_OK_button">Set</string>
+    <string name="parameter_text">enter parameters</string>
+    <string name="parameter_privileges">privileges (0-255)</string>
+    <string name="parameter_OK_button">Set</string>
+    
+    <!-- Get Data Activity -->
+    <string name="title_activity_get_data">GetDataActivity</string>
+    <string name="getdata_descr">Please set your parameters as hex:</string>
+    <string name="getdata_p1">P1</string>
+    <string name="getdata_p2">P2</string>
+    <string name="getdata_btn_ok">OK</string>
+	<string name="getdata_btn_cancel">Cancel</string>
 </resources>

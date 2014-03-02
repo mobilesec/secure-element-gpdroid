@@ -10,6 +10,8 @@ import java.util.Map;
 import javax.smartcardio.Card;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
+import javax.smartcardio.CommandAPDU;
+import javax.smartcardio.ResponseAPDU;
 
 import net.sourceforge.gpj.cardservices.GPUtil;
 import net.sourceforge.gpj.cardservices.GlobalPlatformService;
@@ -52,6 +54,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	public final static int ACTIVITYRESULT_KEYSET_SET = 102;
 	public final static int ACTIVITYRESULT_CHANNEL_SET = 103;
 	public final static int ACTIVITYRESULT_INSTALL_PARAM_SET = 104;
+	public final static int ACTIVITYRESULT_GET_DATA = 105;
 	private TextView mLog;
 
 	// UI Elements
@@ -63,6 +66,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	private Button mButtonAddChannelSet = null;
 	private Button mButtonRemoveKeyset = null;
 	private Button mButtonRemoveChannelset = null;
+	private Button mButtonGetData = null;
 
 	private static LogMe MAIN_Log;
 
@@ -74,13 +78,15 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	private ArrayAdapter<String> mChannelSetAdapter;
 
 	public enum APDU_COMMAND {
-		APDU_INSTALL, APDU_DELETE, APDU_LISTAPPLETS, APDU_SELECT, APDU_SEND
+		APDU_INSTALL, APDU_DELETE, APDU_LISTAPPLETS, APDU_SELECT, APDU_SEND, APDU_GET_DATA
 	}
 
 	private String mAppletUrl = null;
 	private TextView mFileNameView = null;
 	private Map<String, GPKeyset> mKeysetMap = null;
 	private Map<String, GPChannelSet> mChannelSetMap = null;
+	private int mP1 = 0;
+	private int mP2 = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -88,10 +94,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		setContentView(R.layout.activity_main);
 		MAIN_Log = new LogMe();
 
-		// LinearLayout layout = new LinearLayout(this);
-		// layout.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT,
-		// LayoutParams.WRAP_CONTENT));
-		// layout.setOrientation(1);
+		mButtonGetData = (Button) findViewById(R.id.btn_get_data);
 
 		mFileNameView = (TextView) findViewById(R.id.text1);
 		mButtonAddKeyset = (Button) findViewById(R.id.btn_add_keyset);
@@ -259,18 +262,31 @@ public class MainActivity extends Activity implements SEService.CallBack,
 				break;
 
 			case ACTIVITYRESULT_INSTALL_PARAM_SET:
-				byte[] params = getIntent().getExtras().getByteArray("params");
-				byte privileges = getIntent().getExtras().getByte("privileges");
+				byte[] params = _data.getExtras().getByteArray("params");
+				byte privileges = _data.getExtras().getByte("privileges");
 
-				performCommand(APDU_COMMAND.APDU_LISTAPPLETS,
-						mReaderSpinner.getSelectedItemPosition());
+				try {
+					installApplet(mAppletUrl, params, privileges);
+				} catch (Exception e) {
+					MAIN_Log.e(LOG_TAG, "Error while installing: ", e);
+					e.printStackTrace();
+				}
+				break;
+
+			case ACTIVITYRESULT_GET_DATA:
+				mP1 = _data.getExtras().getInt("p1");
+				mP2 = _data.getExtras().getInt("p2");
+				MAIN_Log.d("Parameters: ", "P1="+mP1+", P2="+mP2);
+				performCommand(APDU_COMMAND.APDU_GET_DATA,
+						mReaderSpinner.getSelectedItemPosition(), null,
+						(byte) 0);
 				break;
 			default:
 				break;
 			}
 
 		} else if (_resultCode == Activity.RESULT_CANCELED) {
-			MAIN_Log.d(LOG_TAG, "file not selected");
+			MAIN_Log.d(LOG_TAG, "Result not valid");
 		}
 
 	}
@@ -311,8 +327,8 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	public void addReaderItemsOnSpinner(Reader[] _readers) {
 
 		mReaderSpinner = (Spinner) findViewById(R.id.reader_spinner);
-		buttonConnect = (Button) findViewById(R.id.btn_addkeyset_positive);
-		buttonListApplet = (Button) findViewById(R.id.btn_addkeyset_negative);
+		buttonConnect = (Button) findViewById(R.id.btn_install_applet);
+		buttonListApplet = (Button) findViewById(R.id.btn_list_applets);
 		buttonSelectApplet = (Button) findViewById(R.id.button3);
 
 		if (mReaderSpinner != null) {
@@ -363,11 +379,19 @@ public class MainActivity extends Activity implements SEService.CallBack,
 			buttonConnect.setOnClickListener(new OnClickListener() {
 
 				@Override
-				public void onClick(View arg0) {
-					performCommand(APDU_COMMAND.APDU_INSTALL,
-							mReaderSpinner.getSelectedItemPosition());
+				public void onClick(View v) {
+					Intent intent = new Intent(MainActivity.this,
+							SetInstallParamActivity.class);
+					startActivityForResult(intent,
+							ACTIVITYRESULT_INSTALL_PARAM_SET);
 
 				}
+				// @Override
+				// public void onClick(View arg0) {
+				// performCommand(APDU_COMMAND.APDU_INSTALL,
+				// mReaderSpinner.getSelectedItemPosition());
+				//
+				// }
 			});
 			buttonSelectApplet.setOnClickListener(new OnClickListener() {
 
@@ -392,13 +416,21 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 				@Override
 				public void onClick(View v) {
-					Intent intent = new Intent(MainActivity.this,
-							SetInstallParamActivity.class);
-					startActivityForResult(intent,
-							ACTIVITYRESULT_INSTALL_PARAM_SET);
+					performCommand(APDU_COMMAND.APDU_LISTAPPLETS,
+							mReaderSpinner.getSelectedItemPosition(), null, (byte) 0);
 
 				}
+			});
 
+			mButtonGetData.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					Intent intent = new Intent(MainActivity.this,
+							GetDataActivity.class);
+					startActivityForResult(intent, ACTIVITYRESULT_GET_DATA);
+
+				}
 			});
 		}
 	}
@@ -444,10 +476,20 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		// ------------ END ADDING DEFAULT ------------
 	}
 
-	private void performCommand(APDU_COMMAND _cmd, int _seekReader) {
-		performCommand(_cmd, _seekReader, null);
-	}
 
+	/**
+	 * performs selected command from APDU enum params and privileges are
+	 * necessary for new installations, else they may be set to null
+	 * 
+	 * @param _cmd
+	 *            APDU-enum command
+	 * @param _seekReader
+	 *            actual selected reader
+	 * @param params
+	 *            necessary for installations, else null
+	 * @param privileges
+	 *            necessary for installations, else (byte) 0
+	 */
 	private void performCommand(APDU_COMMAND _cmd, int _seekReader,
 			byte[] params, byte privileges) {
 		GPKeyset keyset = mKeysetMap.get((String) mKeysetSpinner
@@ -506,6 +548,16 @@ public class MainActivity extends Activity implements SEService.CallBack,
 			case APDU_LISTAPPLETS:
 				listApplets();
 				break;
+			case APDU_GET_DATA:
+				// parameters will be set in onActivtyResult;
+				
+				CommandAPDU getData = new CommandAPDU(
+						GlobalPlatformService.CLA_GP,
+						GlobalPlatformService.GET_DATA, mP1, mP2);
+				
+				ResponseAPDU response = GPConnection.getInstance().getData(getData);
+				MAIN_Log.d("Response", GPUtils.byteArrayToString(response.getData()));
+				
 			default:
 				break;
 
@@ -530,6 +582,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		}
 	}
 
+	@Deprecated
 	private void performCommand(APDU_COMMAND _cmd, int _seekReader,
 			Object _param) {
 		GPKeyset keyset = mKeysetMap.get((String) mKeysetSpinner
@@ -612,35 +665,37 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		}
 	}
 
+	/**
+	 * installs an applet from preset url
+	 * @throws IOException
+	 * @throws MalformedURLException
+	 * @throws GPInstallForLoadException
+	 * @throws GPLoadException
+	 * @throws CardException
+	 */
 	private void installApplet() throws IOException, MalformedURLException,
 			GPInstallForLoadException, GPLoadException, CardException {
 		installApplet(mAppletUrl);
 	}
 
+	/**
+	 * installs an applet from preset url
+	 * @param _url where the applet is located
+	 * @throws IOException
+	 * @throws MalformedURLException
+	 * @throws GPInstallForLoadException
+	 * @throws GPLoadException
+	 * @throws CardException
+	 */
 	private void installApplet(String _url) throws IOException,
 			MalformedURLException, GPInstallForLoadException, GPLoadException,
 			CardException {
-		// String fileUrl =
-		// "file:"+Environment.getExternalStorageDirectory().getPath() +
-		// "/usmile/instApplet/apdutester.cap";
-		if (_url == null) {
-			MAIN_Log.d(LOG_TAG, "no Applet selected");
-			return;
-		}
-		if (!(_url).endsWith(".cap")) {
-			throw new IOException("Not a valid path or not a cap file");
-		}
-		// String fileUrl = (String) _param;
-		MAIN_Log.d(LOG_TAG, "Loading Applet from " + _url);
-
-		GPConnection.getInstance().installCapFile(_url);
-
-		MAIN_Log.d(LOG_TAG, "Installation successful");
+		installApplet(_url, null, (byte) 0);
 	}
 
-	private void installApplet(String _url, byte[] params, byte privileges) throws IOException,
-			MalformedURLException, GPInstallForLoadException, GPLoadException,
-			CardException {
+	private void installApplet(String _url, byte[] params, byte privileges)
+			throws IOException, MalformedURLException,
+			GPInstallForLoadException, GPLoadException, CardException {
 		// String fileUrl =
 		// "file:"+Environment.getExternalStorageDirectory().getPath() +
 		// "/usmile/instApplet/apdutester.cap";
@@ -659,12 +714,18 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		MAIN_Log.d(LOG_TAG, "Installation successful");
 	}
 
+	
 	@Override
 	public void fileReceived(String _url) {
+		mAppletUrl = _url;
 		performCommand(APDU_COMMAND.APDU_INSTALL,
-				mReaderSpinner.getSelectedItemPosition(), _url);
+				mReaderSpinner.getSelectedItemPosition(), null, (byte) 0);
 	}
 
+	/**
+	 * lists all applets installed on the currently selected smartcard
+	 * @throws CardException
+	 */
 	private void listApplets() throws CardException {
 		GPAppletData mApplets = GPConnection.getInstance()
 				.loadAppletsfromCard();

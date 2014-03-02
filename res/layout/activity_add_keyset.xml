@@ -168,14 +168,14 @@
         android:layout_height="wrap_content" >
 
         <Button
-            android:id="@+id/btn_addkeyset_positive"
+            android:id="@+id/btn_install_applet"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/keyset_positive" />
 
         <Button
-            android:id="@+id/btn_addkeyset_negative"
+            android:id="@+id/btn_list_applets"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
