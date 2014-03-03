@@ -46,14 +46,7 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 
 		});
 
-		/*
-		 * listView.setOnItemClickListener(new OnItemClickListener() {
-		 * 
-		 * @Override public void onItemClick(AdapterView<?> parent, View view,
-		 * int position, long id) { Toast.makeText(getApplicationContext(),
-		 * "Click ListItem Number " + position, Toast.LENGTH_LONG) .show(); }
-		 * });
-		 */
+		
 	}
 
 	private void setListData(final ListView listview) {
@@ -95,36 +88,7 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
         dialog.show(getFragmentManager(), "AppletDetailFragment");
         
     }
-	/*
-	private class StableArrayAdapter extends ArrayAdapter<String> {
 
-		HashMap<String, Integer> mIdMap = new HashMap<String, Integer>();
-
-		public StableArrayAdapter(Context context, int textViewResourceId,
-				List<String> objects) {
-			super(context, textViewResourceId, objects);
-			for (int i = 0; i < objects.size(); ++i) {
-				mIdMap.put(objects.get(i), i);
-			}
-		}
-
-		@Override
-		public long getItemId(int position) {
-			String item = getItem(position);
-			return mIdMap.get(item);
-		}
-
-		@Override
-		public boolean hasStableIds() {
-			return true;
-		}
-
-	}
-	*/
-//	private String convert(byte[] data) {
-//	    
-//	    return GPUtil.byteArrayToString(data)+"    "+GPUtil.byteArrayToReadableString(data);
-//	}
 
 	@Override
 	public void onDialogDeleteClick(DialogFragment dialog) {

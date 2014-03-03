@@ -266,7 +266,9 @@ public class MainActivity extends Activity implements SEService.CallBack,
 				byte privileges = _data.getExtras().getByte("privileges");
 
 				try {
-					installApplet(mAppletUrl, params, privileges);
+					performCommand(APDU_COMMAND.APDU_INSTALL,
+							mReaderSpinner.getSelectedItemPosition(), params,
+							privileges);
 				} catch (Exception e) {
 					MAIN_Log.e(LOG_TAG, "Error while installing: ", e);
 					e.printStackTrace();
@@ -276,7 +278,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 			case ACTIVITYRESULT_GET_DATA:
 				mP1 = _data.getExtras().getInt("p1");
 				mP2 = _data.getExtras().getInt("p2");
-				MAIN_Log.d("Parameters: ", "P1="+mP1+", P2="+mP2);
+				MAIN_Log.d("Parameters: ", "P1=" + mP1 + ", P2=" + mP2);
 				performCommand(APDU_COMMAND.APDU_GET_DATA,
 						mReaderSpinner.getSelectedItemPosition(), null,
 						(byte) 0);
@@ -291,6 +293,12 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	}
 
+	/**
+	 * sets items to the spinner of keysets
+	 * 
+	 * @param keysets
+	 *            keysets from DB according to the set smartcard
+	 */
 	public void addKeysetItemsOnSpinner(List<String> keysets) {
 		mKeysetSpinner = (Spinner) findViewById(R.id.keyset_spinner);
 
@@ -307,6 +315,12 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		mKeysetAdapter.notifyDataSetChanged();
 	}
 
+	/**
+	 * sets the channelsettings to the channelspinner
+	 * 
+	 * @param channelSets
+	 *            all available channelsets from DB
+	 */
 	public void addChannelSetItemsOnSpinner(List<String> channelSets) {
 		mChannelSpinner = (Spinner) findViewById(R.id.channel_spinner);
 
@@ -417,7 +431,8 @@ public class MainActivity extends Activity implements SEService.CallBack,
 				@Override
 				public void onClick(View v) {
 					performCommand(APDU_COMMAND.APDU_LISTAPPLETS,
-							mReaderSpinner.getSelectedItemPosition(), null, (byte) 0);
+							mReaderSpinner.getSelectedItemPosition(), null,
+							(byte) 0);
 
 				}
 			});
@@ -475,7 +490,6 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 		// ------------ END ADDING DEFAULT ------------
 	}
-
 
 	/**
 	 * performs selected command from APDU enum params and privileges are
@@ -550,14 +564,12 @@ public class MainActivity extends Activity implements SEService.CallBack,
 				break;
 			case APDU_GET_DATA:
 				// parameters will be set in onActivtyResult;
+
 				
-				CommandAPDU getData = new CommandAPDU(
-						GlobalPlatformService.CLA_GP,
-						GlobalPlatformService.GET_DATA, mP1, mP2);
-				
-				ResponseAPDU response = GPConnection.getInstance().getData(getData);
-				MAIN_Log.d("Response", GPUtils.byteArrayToString(response.getData()));
-				
+				ResponseAPDU response = GPConnection.getInstance().getData(mP1, mP2);
+				MAIN_Log.d("Response",
+						GPUtils.byteArrayToString(response.getData()));
+
 			default:
 				break;
 
@@ -667,6 +679,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	/**
 	 * installs an applet from preset url
+	 * 
 	 * @throws IOException
 	 * @throws MalformedURLException
 	 * @throws GPInstallForLoadException
@@ -680,7 +693,9 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	/**
 	 * installs an applet from preset url
-	 * @param _url where the applet is located
+	 * 
+	 * @param _url
+	 *            where the applet is located
 	 * @throws IOException
 	 * @throws MalformedURLException
 	 * @throws GPInstallForLoadException
@@ -714,7 +729,6 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		MAIN_Log.d(LOG_TAG, "Installation successful");
 	}
 
-	
 	@Override
 	public void fileReceived(String _url) {
 		mAppletUrl = _url;
@@ -724,6 +738,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 	/**
 	 * lists all applets installed on the currently selected smartcard
+	 * 
 	 * @throws CardException
 	 */
 	private void listApplets() throws CardException {
