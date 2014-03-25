@@ -111,8 +111,13 @@ public class GPConnection {
 				scpVersion, securityLevel, gemalto);
 	}
 
-	public ResponseAPDU getData(CommandAPDU apdu) throws IllegalStateException, CardException {
-		return mGPService.transmit(apdu);
+	
+	public ResponseAPDU getData(int p1, int p2) throws IllegalStateException, CardException {
+		CommandAPDU getData = new CommandAPDU(
+				GlobalPlatformService.CLA_GP,
+				GlobalPlatformService.GET_DATA, p1, p2);
+
+		return mGPService.transmit(getData);
 	}
 	
 
