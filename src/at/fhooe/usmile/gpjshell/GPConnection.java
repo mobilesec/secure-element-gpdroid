@@ -24,15 +24,6 @@ import at.fhooe.usmile.gpjshell.objects.GPAppletData;
 import at.fhooe.usmile.gpjshell.objects.GPKeyset;
 
 public class GPConnection {
-	private static final String LOG_TAG = "GPConnection";
-
-	private static final byte[] GEMALTO_UICC = {(byte) 0xa0, 0x00, 0x00, 0x00, 0x18,0x43, 0x4D,(byte)0xFF,0x33,(byte)0xFF,(byte)0xFF,(byte)0x89,(byte)0xC0,0x00,0x00};
-
-	private static final String READER_UICC = "SIM - UICC";
-	private static final String READER_SDDEVICEFIDELITY = "SD - DeviceFidelity SD Card";
-	private static final int UICC_KEY_ID = 32;
-	private static final int SD_KEY_ID = 0;
-	
 	
 	private static final String LOG_TAG = "GPConnection";
 	
