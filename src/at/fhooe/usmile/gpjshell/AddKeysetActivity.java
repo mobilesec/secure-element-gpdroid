@@ -2,11 +2,15 @@ package at.fhooe.usmile.gpjshell;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import at.fhooe.usmile.gpjshell.db.KeysetDataSource;
 import at.fhooe.usmile.gpjshell.objects.GPKeyset;
 
 public class AddKeysetActivity extends Activity {
@@ -30,7 +34,7 @@ public class AddKeysetActivity extends Activity {
 		editENC = (EditText) findViewById(R.id.edit_keyset_enc);
 		editKEK = (EditText) findViewById(R.id.edit_keyset_kek);
 
-		mPositive = (Button) findViewById(R.id.btn_addkeyset_positive);
+		mPositive = (Button) findViewById(R.id.btn_install_applet);
 		mPositive.setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -39,7 +43,9 @@ public class AddKeysetActivity extends Activity {
 						&& !editID.getText().toString().equals("")
 						&& !editVersion.getText().toString().equals("")) {
 					
-					GPKeyset keyset = new GPKeyset(editName.getText()
+					
+					//set unique id to -1. it will be set by DB later
+					GPKeyset keyset = new GPKeyset(-1, editName.getText()
 							.toString(), Integer.valueOf(editID.getText()
 							.toString()), Integer.valueOf(editVersion.getText()
 							.toString()), editMAC.getText().toString(), editENC
@@ -47,15 +53,27 @@ public class AddKeysetActivity extends Activity {
 					Intent intent = new Intent();
 					intent.putExtra(GPKeyset.KEYSET, keyset);
 					setResult(RESULT_OK, intent);
-					finish();
+					
+					KeysetDataSource source = new KeysetDataSource(AddKeysetActivity.this);
+					source.open();
+					boolean containsKey = source.containsKeyset(keyset.getID(), getIntent().getExtras().getString("readername"));
+					source.close();
+					
+					if (containsKey)
+						createDialog().show();
+					else
+						finish();
+					
 				} else {
 					Toast.makeText(AddKeysetActivity.this, "Please enter valid ID and Version", Toast.LENGTH_LONG).show();
 				}
 				
 			}
 		});
+		
+		
 
-		mNegative = (Button) findViewById(R.id.btn_addkeyset_negative);
+		mNegative = (Button) findViewById(R.id.btn_list_applets);
 		mNegative.setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -65,4 +83,23 @@ public class AddKeysetActivity extends Activity {
 			}
 		});
 	}
+	
+	
+	public Dialog createDialog() {
+        // Build the dialog and set up the button click handlers
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.keyset_dialog_title);
+        builder.setMessage(R.string.keyset_dialog_ask_overwrite)
+               .setPositiveButton(R.string.keyset_positive, new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                       AddKeysetActivity.this.finish();
+                   }
+               })
+               .setNegativeButton(R.string.keyset_negative, new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                	   dialog.cancel();
+                   }
+               });
+        return builder.create();
+    }
 }

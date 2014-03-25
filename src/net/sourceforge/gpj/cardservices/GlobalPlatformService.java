@@ -126,7 +126,7 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
 
     public static final byte[] defaultKekKey = { 0x40, 0x41, 0x42, 0x43, 0x44,
             0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
-    
+
     public static Map<String, byte[]> SPECIAL_MOTHER_KEYS = new TreeMap<String, byte[]>();
 
     static {
@@ -300,7 +300,7 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
      * @throws CardException
      *             if some communication problem is encountered.
      */
-    public void openSecureChannel(int keySet, int keyId, int scpVersion,
+    public void openSecureChannel(int keySet, int keyId, int keyVersion, int scpVersion,
             int securityLevel, boolean gemalto) throws IllegalArgumentException, CardException {
 
         if (scpVersion < SCP_ANY || scpVersion > SCP_02_1B) {
@@ -357,7 +357,7 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
         byte[] rand = new byte[8];
         new Random().nextBytes(rand);
 
-        CommandAPDU initUpdate = new CommandAPDU(CLA_GP, INIT_UPDATE, keySet,
+        CommandAPDU initUpdate = new CommandAPDU(CLA_GP, INIT_UPDATE, keyVersion,
                 keyId, rand);
 
         ResponseAPDU response = channel.transmit(initUpdate);
@@ -460,11 +460,10 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
      *             security domain arise.
      */
     public void openWithDefaultKeys() throws CardException {
-//        open();
+        open();
         int keySet = 0;
         setKeys(keySet, defaultEncKey, defaultMacKey, defaultKekKey);
-        openSecureChannel(keySet, 0, SCP_ANY, APDU_MAC, false);
-//        openSecureChannel(keySet, 0, SCP_02_15, APDU_ENC, true);
+        openSecureChannel(keySet, 0, 0, SCP_ANY, APDU_MAC, false);
     }
 
     public boolean isSecureChannelOpen() {
@@ -1659,7 +1658,7 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
                     if (loadSize + neededExtraSize > defaultLoadSize) {
                         loadSize -= neededExtraSize;
                     }
-                    service.openSecureChannel(keySet, 0,
+                    service.openSecureChannel(keySet, 0, 0,
                             GlobalPlatformService.SCP_ANY,
                             apduMode, gemalto);
 

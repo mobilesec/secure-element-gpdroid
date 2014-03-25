@@ -15,6 +15,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/main_descr_keyset"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
@@ -44,6 +52,14 @@
             android:minWidth="64dp" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/main_descr_channel"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -75,25 +91,32 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/text1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="no file selected"
+        android:textStyle="bold" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
-
-        <TextView
-            android:id="@+id/text1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="no file selected"
-            android:textStyle="bold" />
 
         <Button
             android:id="@+id/button3"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Choose Applet " />
+            android:text="@string/btn_choose_applet" />
+
+        <Button
+            android:id="@+id/btn_list_applets"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/btn_list_applets" />
+
     </LinearLayout>
 
     <LinearLayout
@@ -102,18 +125,19 @@
         android:orientation="horizontal" >
 
         <Button
-            android:id="@+id/btn_addkeyset_negative"
+            android:id="@+id/btn_install_applet"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="List Applets" />
+            android:text="@string/btn_install_applet" />
 
         <Button
-            android:id="@+id/btn_addkeyset_positive"
+            android:id="@+id/btn_get_data"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Install Applet" />
+            android:text="@string/btn_get_data" />
+
     </LinearLayout>
 
     <TextView
