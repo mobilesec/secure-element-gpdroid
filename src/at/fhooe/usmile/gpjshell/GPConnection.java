@@ -77,7 +77,7 @@ public class GPConnection {
 		return data.getSelectedApplet();
 	}
 
-	public void deleteSelectedApplet() throws GPDeleteException, CardException {
+	private void deleteSelectedApplet() throws GPDeleteException, CardException {
 		if (data.getSelectedApplet().getKind() == Kind.IssuerSecurityDomain
 				|| data.getSelectedApplet().getKind() == Kind.SecurityDomain) {
 			throw new CardException(
@@ -87,7 +87,7 @@ public class GPConnection {
 		data.removeSelectedAppletFromList();
 	}
 
-	public void deleteAID(AID deleteAID) throws GPDeleteException, CardException {
+	private void deleteAID(AID deleteAID) throws GPDeleteException, CardException {
 
 		mGPService.deleteAID(deleteAID, true);
 	}
@@ -96,13 +96,13 @@ public class GPConnection {
 	 * @param channel 
 	 * @param keyset predefined keyset
 	 */
-	public void initializeKeys(CardChannel channel, GPKeyset keyset) {
+	private void initializeKeys(CardChannel channel, GPKeyset keyset) {
 		mGPService = new GlobalPlatformService(channel);
 		mGPService.setKeys(keyset.getID(), keyset.getENCByte(),
 				keyset.getMACByte(), keyset.getKEKByte());
 	}
 
-	public void open() throws GPSecurityDomainSelectionException, CardException {
+	private void open() throws GPSecurityDomainSelectionException, CardException {
 
 		mGPService.addAPDUListener(mGPService);
 		mGPService.open();
@@ -119,7 +119,7 @@ public class GPConnection {
 	 * @throws IllegalArgumentException
 	 * @throws CardException
 	 */
-	public void openSecureChannel(int uniqueIndex, int keyId, int keyVersion,
+	private void openSecureChannel(int uniqueIndex, int keyId, int keyVersion,
 			int scpVersion, int securityLevel, boolean gemalto)
 			throws IllegalArgumentException, CardException {
 		mGPService.openSecureChannel(uniqueIndex, keyId, keyVersion,
@@ -127,7 +127,7 @@ public class GPConnection {
 	}
 
 	
-	public ResponseAPDU getData(int p1, int p2) throws IllegalStateException, CardException {
+	private ResponseAPDU getData(int p1, int p2) throws IllegalStateException, CardException {
 		CommandAPDU getData = new CommandAPDU(
 				GlobalPlatformService.CLA_GP,
 				GlobalPlatformService.GET_DATA, p1, p2);
@@ -152,7 +152,7 @@ public class GPConnection {
 	 * @throws GPLoadException
 	 * @throws CardException
 	 */
-	public void installCapFile(String _appletUrl, byte[] params, byte privileges)
+	private void installCapFile(String _appletUrl, byte[] params, byte privileges)
 			throws IOException, MalformedURLException,
 			GPInstallForLoadException, GPLoadException, CardException {
 		CapFile cpFile = new CapFile(new URL(_appletUrl).openStream(), null);
@@ -239,6 +239,7 @@ public class GPConnection {
 						+ " Applets.";
 	}
 	/**
+	 * Method that performs the given GPCommand
 	 * @param keyset
 	 * @param channelSet
 	 * @param _cmd
