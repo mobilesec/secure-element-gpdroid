@@ -7,15 +7,20 @@ public class GPCommand {
 	private byte[] mParams;
 	private byte mPrivileges;
 	private int mSeekReader;
+	private String mReaderName;
+
+	
 	private APDU_COMMAND mCmd;
+	private Object mCommandParameter;
+	
 
 	public GPCommand(APDU_COMMAND _cmd, int _seekReader, byte[] _params,
-			byte _privileges) {
+			byte _privileges, Object _cmdParam) {
 		setCmd(_cmd);
 		setSeekReader(_seekReader);
 		setPrivileges(_privileges);
 		setParams(_params);
-		
+		setCommandParameter(_cmdParam);
 	}
 
 	public APDU_COMMAND getCmd() {
@@ -34,7 +39,7 @@ public class GPCommand {
 		this.mPrivileges = mPrivileges;
 	}
 
-	public byte[] getParams() {
+	public byte[] getInstallParams() {
 		return mParams;
 	}
 
@@ -50,4 +55,19 @@ public class GPCommand {
 		this.mSeekReader = mSeekReader;
 	}
 
+	public String getSeekReaderName() {
+		return mReaderName;
+	}
+
+	public void setReaderName(String mReaderName) {
+		this.mReaderName = mReaderName;
+	}
+
+	public Object getCommandParameter() {
+		return mCommandParameter;
+	}
+
+	public void setCommandParameter(Object mCommandParameter) {
+		this.mCommandParameter = mCommandParameter;
+	}
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import javax.smartcardio.Card;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
@@ -12,6 +13,7 @@ import javax.smartcardio.ResponseAPDU;
 import net.sourceforge.gpj.cardservices.AID;
 import net.sourceforge.gpj.cardservices.AIDRegistry;
 import net.sourceforge.gpj.cardservices.AIDRegistryEntry;
+import net.sourceforge.gpj.cardservices.GPUtil;
 import net.sourceforge.gpj.cardservices.AIDRegistryEntry.Kind;
 import net.sourceforge.gpj.cardservices.CapFile;
 import net.sourceforge.gpj.cardservices.GlobalPlatformService;
@@ -19,8 +21,12 @@ import net.sourceforge.gpj.cardservices.exceptions.GPDeleteException;
 import net.sourceforge.gpj.cardservices.exceptions.GPInstallForLoadException;
 import net.sourceforge.gpj.cardservices.exceptions.GPLoadException;
 import net.sourceforge.gpj.cardservices.exceptions.GPSecurityDomainSelectionException;
+import net.sourceforge.gpj.cardservices.interfaces.OpenMobileAPITerminal;
+import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import at.fhooe.usmile.gpjshell.objects.GPAppletData;
+import at.fhooe.usmile.gpjshell.objects.GPChannelSet;
 import at.fhooe.usmile.gpjshell.objects.GPKeyset;
 
 public class GPConnection {
@@ -31,16 +37,19 @@ public class GPConnection {
 	private GPAppletData data = null;
 	private GlobalPlatformService mGPService;
 
-	public static GPConnection getInstance() {
+	private Context mContext;
+
+	public static GPConnection getInstance(Context _con) {	
 		synchronized (GPConnection.class) {
 			if (_INSTANCE == null) {
-				_INSTANCE = new GPConnection();
+				_INSTANCE = new GPConnection(_con);
 			}
 			return _INSTANCE;
 		}
 	}
 
-	private GPConnection() {
+	private GPConnection(Context _con) {
+		mContext = _con;
 		data = new GPAppletData(null, -1);
 	}
 
@@ -156,6 +165,169 @@ public class GPConnection {
 		data.setRegistry(registry);
 
 		return data;
+	}
+	
+	private void deleteApplet(AID aid) {
+		try {
+			deleteAID(aid);
+		} catch (GPDeleteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CardException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * installs an applet from preset url
+	 * 
+	 * @param _url
+	 *            where the applet is located
+	 * @throws IOException
+	 * @throws MalformedURLException
+	 * @throws GPInstallForLoadException
+	 * @throws GPLoadException
+	 * @throws CardException
+	 */
+	private String installApplet(String _url) throws IOException,
+			MalformedURLException, GPInstallForLoadException, GPLoadException,
+			CardException {
+		return installApplet(_url, null, (byte) 0);
+	}
+
+	private String installApplet(String _url, byte[] params, byte privileges)
+			throws IOException, MalformedURLException,
+			GPInstallForLoadException, GPLoadException, CardException {
+		// String fileUrl =
+		// "file:"+Environment.getExternalStorageDirectory().getPath() +
+		// "/usmile/instApplet/apdutester.cap";
+		if (_url == null) {
+			return "no Applet selected";
+		}
+		if (!(_url).endsWith(".cap")) {
+			throw new IOException("Not a valid path or not a cap file");
+		}
+		// String fileUrl = (String) _param;
+		String ret = "Loading Applet from " + _url+"\n";
+
+		installCapFile(_url, params, privileges);
+
+		return ret+"Installation successful";
+	}
+
+	/**
+	 * lists all applets installed on the currently selected smartcard
+	 * 
+	 * @throws CardException
+	 */
+	private String listApplets(String _reader) throws CardException {
+		GPAppletData mApplets = loadAppletsfromCard();
+
+		return "Read all applets from reader "
+						+ _reader + ". "
+						+ mApplets.getRegistry().allPackages().size()
+						+ " Applets.";
+
+		// listAppletsToLog();
+	}
+	/**
+	 * @param keyset
+	 * @param channelSet
+	 * @param _cmd
+	 * @return
+	 */
+	public String performCommand(OpenMobileAPITerminal _term, GPKeyset keyset, GPChannelSet channelSet,
+			GPCommand _cmd) {
+		String ret = null;
+		try {
+			Card c = null;
+			boolean closeConn = true;
+			
+			_term.setReader(_cmd.getSeekReader());
+			c = _term.connect("*");
+
+			System.out
+					.println("Found card in terminal: " + _term.getName());
+			if (c.getATR() != null) {
+				System.out.println("ATR: "
+						+ GPUtil.byteArrayToString(c.getATR().getBytes()));
+			}
+			CardChannel channel = c.openLogicalChannel();
+
+			initializeKeys(channel, keyset);
+			open();
+
+			// opening channel with index of keyset - is unique
+			openSecureChannel(keyset.getID(),
+					keyset.getID(), keyset.getVersion(),
+					channelSet.getScpVersion(), channelSet.getSecurityLevel(),
+					channelSet.isGemalto());
+
+			Log.d(LOG_TAG, "Secure channel opened");
+
+			switch (_cmd.getCmd()) {
+			case APDU_INSTALL:
+				if (_cmd.getInstallParams() != null) {
+					ret = installApplet((String)_cmd.getCommandParameter(), _cmd.getInstallParams(), _cmd.getPrivileges());
+				} else {
+					ret = installApplet((String)_cmd.getCommandParameter());
+				}
+				break;
+
+			case APDU_DELETE_SENT_APPLET:
+				AID aid;
+				aid = CAPFile.readAID((String)_cmd.getCommandParameter());
+				ret = "TCPConn" + GPUtils.byteArrayToString(aid.getBytes());
+				deleteApplet(aid);
+				break;
+
+			case APDU_DELETE_SELECTED_APPLET:
+				deleteSelectedApplet();
+				ret = "Applet deleted";
+				break;
+			case APDU_LISTAPPLETS:
+				ret = listApplets(_cmd.getSeekReaderName());
+				channel.close();	
+				
+				Intent intent = new Intent(mContext, AppletListActivity.class);
+				intent.putExtra(AppletListActivity.EXTRA_CHANNELSET, channelSet);
+				intent.putExtra(AppletListActivity.EXTRA_KEYSET, keyset);
+				intent.putExtra(AppletListActivity.EXTRA_SEEKREADER, _cmd.getSeekReader());
+				
+				mContext.startActivity(intent);
+				closeConn = false;
+				break;
+
+			case APDU_GET_DATA:
+				ResponseAPDU response = getData(((Integer[])_cmd.getCommandParameter())[0],((Integer[])_cmd.getCommandParameter())[1]);
+				ret = "Response: " + //TODO: write a parser 
+						GPUtils.byteArrayToString(response.getData());
+			default:
+				break;
+			}
+
+			if(closeConn){
+				channel.close();	
+				c.disconnect(true);				
+			}
+		} catch (GPSecurityDomainSelectionException e) {
+			ret = "GPSecurityDomainSelectionException " + e.getLocalizedMessage();
+			e.printStackTrace();
+		} catch (GPInstallForLoadException e) {
+			ret = "GPInstallForLoadException - Applet already installed? "+ e.getLocalizedMessage();
+			e.printStackTrace();
+		} catch (CardException e) {
+			ret = "CardException "+ e.getLocalizedMessage();
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			ret = "MalformedURLException "+ e.getLocalizedMessage();
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+			ret= "IOException "+e.getLocalizedMessage();
+		}
+		return ret;
 	}
 
 }

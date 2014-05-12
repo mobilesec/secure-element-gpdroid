@@ -83,7 +83,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	private ArrayAdapter<String> mChannelSetAdapter;
 
 	public enum APDU_COMMAND {
-		APDU_INSTALL, APDU_DELETE, APDU_LISTAPPLETS, APDU_SELECT, APDU_SEND, APDU_GET_DATA
+		APDU_INSTALL, APDU_DELETE_SENT_APPLET, APDU_LISTAPPLETS, APDU_SELECT, APDU_SEND, APDU_GET_DATA, APDU_DELETE_SELECTED_APPLET
 	}
 
 	private String mAppletUrl = null;
@@ -170,20 +170,21 @@ public class MainActivity extends Activity implements SEService.CallBack,
 								"keyset name " + mKeysetAdapter.getItem(i));
 					}
 					mKeysetAdapter.remove(keyset.getDisplayName());
+					
 					Log.d(LOG_TAG, "keyset count" + mKeysetAdapter.getCount());
 					mKeysetAdapter.notifyDataSetChanged();
-					// mKeysetSpinner.upsetAdapter(mKeysetAdapter);
 				}
 			}
 		});
 
 		loadPreferences();
 
+
 		mLog = (TextView) findViewById(R.id.log);
 		mLog.setMovementMethod(new ScrollingMovementMethod());
-		// layout.addView(mLog);
+		
 		MAIN_Log.d(LOG_TAG, "Start GPJ Shell");
-		GlobalPlatformService.usage();
+		//GlobalPlatformService.usage();
 
 	}
 
@@ -239,7 +240,6 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	@Override
 	public void onActivityResult(int _requestCode, int _resultCode, Intent _data) {
 
-		MAIN_Log.d(LOG_TAG, "Resultcode " + _resultCode);
 		if (_resultCode == Activity.RESULT_OK) {
 
 			switch (_requestCode) {
@@ -303,7 +303,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 				try {
 					performCommand(APDU_COMMAND.APDU_INSTALL,
 							mReaderSpinner.getSelectedItemPosition(), params,
-							privileges);
+							privileges, mAppletUrl);
 				} catch (Exception e) {
 					MAIN_Log.e(LOG_TAG, "Error while installing: ", e);
 					e.printStackTrace();
@@ -319,11 +319,12 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 					@Override
 					public void run() {
+						Integer params[] = {mP1,mP2};
 						performCommand(APDU_COMMAND.APDU_GET_DATA,
 								mReaderSpinner.getSelectedItemPosition(), null,
-								(byte) 0);
+								(byte) 0, params);
 					}
-				}, 500);
+				}, 000);
 
 				break;
 			default:
@@ -445,12 +446,6 @@ public class MainActivity extends Activity implements SEService.CallBack,
 							ACTIVITYRESULT_INSTALL_PARAM_SET);
 
 				}
-				// @Override
-				// public void onClick(View arg0) {
-				// performCommand(APDU_COMMAND.APDU_INSTALL,
-				// mReaderSpinner.getSelectedItemPosition());
-				//
-				// }
 			});
 			buttonSelectApplet.setOnClickListener(new OnClickListener() {
 
@@ -464,10 +459,6 @@ public class MainActivity extends Activity implements SEService.CallBack,
 					startActivityForResult(Intent.createChooser(intent,
 							"Select a File to Upload"),
 							ACTIVITYRESULT_FILESELECTED);
-					// startActivityForResult(intent,
-					// ACTIVITYRESULT_FILESELECTED);
-					// performCommand(APDU_COMMAND.APDU_INSTALL,
-					// mReaderSpinner.getSelectedItemPosition());
 				}
 
 			});
@@ -477,7 +468,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 				public void onClick(View v) {
 					performCommand(APDU_COMMAND.APDU_LISTAPPLETS,
 							mReaderSpinner.getSelectedItemPosition(), null,
-							(byte) 0);
+							(byte) 0, null);
 
 				}
 			});
@@ -557,124 +548,17 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	 *            necessary for installations, else (byte) 0
 	 */
 	private void performCommand(APDU_COMMAND _cmd, int _seekReader,
-			byte[] _params, byte _privileges) {	    
-	    GPCommand c = new GPCommand(_cmd, _seekReader, _params, _privileges);
+			byte[] _params, byte _privileges, Object _cmdParam) {	    
+	    GPCommand c = new GPCommand(_cmd, _seekReader, _params, _privileges, _cmdParam);
+	    c.setReaderName(mReaderSpinner.getSelectedItem().toString());
 	    if(mTerminal.isConnected()){
 		    new PerformCommandTask().execute(c);
 	    }
 	    else{
-	    	mCommandExecutionQueue.add(new GPCommand(_cmd, _seekReader, _params, _privileges));
+	    	mCommandExecutionQueue.add(c);
 	    }
 	}
 
-	private void deleteApplet(AID aid) {
-		try {
-			GPConnection.getInstance().deleteAID(aid);
-		} catch (GPDeleteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CardException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	/*
-	 * @Deprecated private void performCommand(APDU_COMMAND _cmd, int
-	 * _seekReader, Object _param) { GPKeyset keyset = mKeysetMap.get((String)
-	 * mKeysetSpinner .getSelectedItem()); GPChannelSet channelSet =
-	 * mChannelSetMap.get((String) mChannelSpinner .getSelectedItem());
-	 * 
-	 * try { Card c = null; try { mTerminal.setReader(_seekReader); c =
-	 * mTerminal.connect("*"); } catch (CardException e) { if (e.getMessage() !=
-	 * null && e.getMessage().equalsIgnoreCase( "SCARD_E_NO_SMARTCARD")) {
-	 * System.err.println("No card in reader " + mTerminal.getName()); } else {
-	 * e.printStackTrace(); } return; }
-	 * 
-	 * System.out .println("Found card in terminal: " + mTerminal.getName()); if
-	 * (c.getATR() != null) { System.out.println("ATR: " +
-	 * GPUtil.byteArrayToString(c.getATR().getBytes())); } CardChannel channel =
-	 * c.openLogicalChannel();
-	 * 
-	 * GPConnection.getInstance().initializeKeys(channel, keyset);
-	 * GPConnection.getInstance().open();
-	 * 
-	 * MAIN_Log.d(LOG_TAG, "GPShell finished opening OpenMobileAPI Terminal");
-	 * 
-	 * // opening channel with index of keyset - is unique
-	 * GPConnection.getInstance().openSecureChannel(keyset.getID(),
-	 * keyset.getID(), keyset.getVersion(), channelSet.getScpVersion(),
-	 * channelSet.getSecurityLevel(), channelSet.isGemalto());
-	 * 
-	 * MAIN_Log.d(LOG_TAG, "Secure channel opened");
-	 * 
-	 * switch (_cmd) { case APDU_INSTALL: if (_param != null && _param
-	 * instanceof String) { installApplet((String) _param); } else {
-	 * installApplet(); } break; case APDU_DELETE: case APDU_LISTAPPLETS:
-	 * listApplets(); break; default: break;
-	 * 
-	 * }
-	 * 
-	 * } catch (GPSecurityDomainSelectionException e) { MAIN_Log.e(LOG_TAG,
-	 * "GPSecurityDomainSelectionException ", e); e.printStackTrace(); } catch
-	 * (GPInstallForLoadException e) { MAIN_Log.e(LOG_TAG,
-	 * "GPInstallForLoadException - Applet already installed? ", e);
-	 * e.printStackTrace(); } catch (CardException e) { MAIN_Log.e(LOG_TAG,
-	 * "CardException ", e); e.printStackTrace(); } catch (MalformedURLException
-	 * e) { MAIN_Log.e(LOG_TAG, "MalformedURLException ", e);
-	 * e.printStackTrace(); } catch (IOException e) { MAIN_Log.e(LOG_TAG,
-	 * "IOException ", e); e.printStackTrace(); } }
-	 */
-	/**
-	 * installs an applet from preset url
-	 * 
-	 * @throws IOException
-	 * @throws MalformedURLException
-	 * @throws GPInstallForLoadException
-	 * @throws GPLoadException
-	 * @throws CardException
-	 */
-	private String installApplet() throws IOException, MalformedURLException,
-			GPInstallForLoadException, GPLoadException, CardException {
-		return installApplet(mAppletUrl);
-	}
-
-	/**
-	 * installs an applet from preset url
-	 * 
-	 * @param _url
-	 *            where the applet is located
-	 * @throws IOException
-	 * @throws MalformedURLException
-	 * @throws GPInstallForLoadException
-	 * @throws GPLoadException
-	 * @throws CardException
-	 */
-	private String installApplet(String _url) throws IOException,
-			MalformedURLException, GPInstallForLoadException, GPLoadException,
-			CardException {
-		return installApplet(_url, null, (byte) 0);
-	}
-
-	private String installApplet(String _url, byte[] params, byte privileges)
-			throws IOException, MalformedURLException,
-			GPInstallForLoadException, GPLoadException, CardException {
-		// String fileUrl =
-		// "file:"+Environment.getExternalStorageDirectory().getPath() +
-		// "/usmile/instApplet/apdutester.cap";
-		if (_url == null) {
-			return "no Applet selected";
-		}
-		if (!(_url).endsWith(".cap")) {
-			throw new IOException("Not a valid path or not a cap file");
-		}
-		// String fileUrl = (String) _param;
-		String ret = "Loading Applet from " + _url+"\n";
-
-		GPConnection.getInstance().installCapFile(_url, params, privileges);
-
-		return ret+"Installation successful";
-	}
 
 	@Override
 	public void fileReceived(String _url, int _reader, int _keyset,
@@ -684,29 +568,13 @@ public class MainActivity extends Activity implements SEService.CallBack,
 		mKeysetSpinner.setSelection(_keyset);
 		mChannelSpinner.setSelection(_securechannelset);
 
-		performCommand(APDU_COMMAND.APDU_DELETE,
-				mReaderSpinner.getSelectedItemPosition(), null, (byte) 0);
+		performCommand(APDU_COMMAND.APDU_DELETE_SENT_APPLET,
+				mReaderSpinner.getSelectedItemPosition(), null, (byte) 0, mAppletUrl);
 		performCommand(APDU_COMMAND.APDU_INSTALL,
-				mReaderSpinner.getSelectedItemPosition(), null, (byte) 0);
+				mReaderSpinner.getSelectedItemPosition(), null, (byte) 0, mAppletUrl);
 
 	}
 
-	/**
-	 * lists all applets installed on the currently selected smartcard
-	 * 
-	 * @throws CardException
-	 */
-	private String listApplets() throws CardException {
-		GPAppletData mApplets = GPConnection.getInstance()
-				.loadAppletsfromCard();
-
-		return "Read all applets from reader "
-						+ mReaderSpinner.getSelectedItem() + ". "
-						+ mApplets.getRegistry().allPackages().size()
-						+ " Applets.";
-
-		// listAppletsToLog();
-	}
 
 	private class PerformCommandTask extends AsyncTask<GPCommand, Void, String> {
 		@Override
@@ -720,95 +588,13 @@ public class MainActivity extends Activity implements SEService.CallBack,
 			
 			String ret = null;
 			
-			try {
-				Card c = null;
-				boolean closeConn = true;
-				
-				mTerminal.setReader(_cmd[0].getSeekReader());
-				c = mTerminal.connect("*");
-
-				System.out
-						.println("Found card in terminal: " + mTerminal.getName());
-				if (c.getATR() != null) {
-					System.out.println("ATR: "
-							+ GPUtil.byteArrayToString(c.getATR().getBytes()));
-				}
-				CardChannel channel = c.openLogicalChannel();
-
-				GPConnection.getInstance().initializeKeys(channel, keyset);
-				GPConnection.getInstance().open();
-
-				// opening channel with index of keyset - is unique
-				GPConnection.getInstance().openSecureChannel(keyset.getID(),
-						keyset.getID(), keyset.getVersion(),
-						channelSet.getScpVersion(), channelSet.getSecurityLevel(),
-						channelSet.isGemalto());
-
-				Log.d(LOG_TAG, "Secure channel opened");
-
-				switch (_cmd[0].getCmd()) {
-				case APDU_INSTALL:
-					if (_cmd[0].getParams() != null) {
-						ret = installApplet(mAppletUrl, _cmd[0].getParams(), _cmd[0].getPrivileges());
-					} else {
-						ret = installApplet();
-					}
-					break;
-
-				case APDU_DELETE:
-					AID aid;
-					aid = CAPFile.readAID(mAppletUrl);
-					ret = "TCPConn" + GPUtils.byteArrayToString(aid.getBytes());
-					deleteApplet(aid);
-					break;
-
-				case APDU_LISTAPPLETS:
-					ret = listApplets();
-					channel.close();	
-					
-					Intent intent = new Intent(MainActivity.this, AppletListActivity.class);
-					startActivity(intent);
-					closeConn = false;
-					break;
-
-				case APDU_GET_DATA:
-					// parameters will be set in onActivtyResult;
-
-					ResponseAPDU response = GPConnection.getInstance().getData(mP1,
-							mP2);
-					ret = "Response" + 
-							GPUtils.byteArrayToString(response.getData());
-				default:
-					break;
-				}
-
-				if(closeConn){
-					channel.close();	
-					c.disconnect(true);				
-				}
-			} catch (GPSecurityDomainSelectionException e) {
-				ret = "GPSecurityDomainSelectionException " + e.getLocalizedMessage();
-				e.printStackTrace();
-			} catch (GPInstallForLoadException e) {
-				ret = "GPInstallForLoadException - Applet already installed? "+ e.getLocalizedMessage();
-				e.printStackTrace();
-			} catch (CardException e) {
-				ret = "CardException "+ e.getLocalizedMessage();
-				e.printStackTrace();
-			} catch (MalformedURLException e) {
-				ret = "MalformedURLException "+ e.getLocalizedMessage();
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-				ret= "IOException "+e.getLocalizedMessage();
-			}
+			ret = GPConnection.getInstance(MainActivity.this).performCommand(mTerminal, keyset, channelSet, _cmd[0]);
 			return ret;
 		}
-		
+
 		protected void onPostExecute(String _resultString){
 			MAIN_Log.d(LOG_TAG, _resultString);			
 		}
-		
 	}
 
 	public static LogMe log() {

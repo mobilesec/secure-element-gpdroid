@@ -21,13 +21,22 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import at.fhooe.usmile.gpjshell.MainActivity.APDU_COMMAND;
+import at.fhooe.usmile.gpjshell.objects.GPChannelSet;
+import at.fhooe.usmile.gpjshell.objects.GPKeyset;
 
 public class AppletListActivity extends Activity implements AppletDetailActivity.NoticeAppletEventListener, SEService.CallBack{
 
 	private static final String LOG_TAG = "AppletListActivity";
+	public static final String EXTRA_CHANNELSET = "extra_channelset";
+	public static final String EXTRA_KEYSET = "extra_keyset";
+	public static final String EXTRA_SEEKREADER = "extra_reader";
 	private List<String> appletNames = null;
 	private ArrayAdapter<String> mListAdapter;
 	private OpenMobileAPITerminal mTerminal;
+	private GPKeyset mKeySet;
+	private GPChannelSet mChannelSet;
+	private int mSeekReader;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +48,9 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 		Log.d("Michi", "oncreate applet list");
 		setListData(listview);
 
+		mKeySet = (GPKeyset) getIntent().getSerializableExtra(EXTRA_KEYSET);
+		mChannelSet = (GPChannelSet) getIntent().getSerializableExtra(EXTRA_CHANNELSET);
+		mSeekReader = (Integer) getIntent().getSerializableExtra(EXTRA_SEEKREADER);
 		listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 			@Override
@@ -46,7 +58,7 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 					int position, long id) {
 //				final String item = (String) parent.getItemAtPosition(position);
 
-				GPConnection.getInstance().setSelectedApplet(position);
+				GPConnection.getInstance(getApplicationContext()).setSelectedApplet(position);
 
 				showAppletDetailsDialog();
 			}
@@ -71,7 +83,7 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 		}
 	}
 	private void setListData(final ListView listview) {
-		AIDRegistry registry = GPConnection.getInstance().getRegistry();
+		AIDRegistry registry = GPConnection.getInstance(getApplicationContext()).getRegistry();
 		appletNames = new ArrayList<String>();
 		
 		updateData(registry);
@@ -115,12 +127,18 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 	public void onDialogDeleteClick(DialogFragment dialog) {
 	
 		try {			
-			GPConnection.getInstance().deleteSelectedApplet();
-			MainActivity.log().log(LOG_TAG, "Successfully removed: "+GPConnection.getInstance().getSelectedApplet().getAID());
-			GPConnection.getInstance().loadAppletsfromCard();
+			GPCommand cmd = new GPCommand(APDU_COMMAND.APDU_DELETE_SELECTED_APPLET, mSeekReader, null, (byte)0, null);
+			GPConnection.getInstance(getApplicationContext()).performCommand(mTerminal, mKeySet, mChannelSet, cmd);
+			
+			MainActivity.log().log(LOG_TAG, "Successfully removed: "+GPConnection.getInstance(getApplicationContext()).getSelectedApplet().getAID());
+			
+			/**
+			 * Reload
+			 */
+			GPConnection.getInstance(this).loadAppletsfromCard();
 			
 			appletNames = new ArrayList<String>();
-			updateData(GPConnection.getInstance().getRegistry());
+			updateData(GPConnection.getInstance(getApplicationContext()).getRegistry());
 			mListAdapter.clear();
 			mListAdapter.addAll(appletNames);
 

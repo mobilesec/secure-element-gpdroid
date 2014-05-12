@@ -72,7 +72,7 @@ public class AppletDetailActivity extends DialogFragment {
 	}
 
 	private void setupAppletDataDetails(Builder _builder) {
-		AIDRegistryEntry data = GPConnection.getInstance().getSelectedApplet();
+		AIDRegistryEntry data = GPConnection.getInstance(getActivity()).getSelectedApplet();
 		_builder.setTitle(data.getAID().toString());
 
 		String aIDText = "", spaces = "";
