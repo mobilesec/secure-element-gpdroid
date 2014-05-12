@@ -8,11 +8,8 @@
         android:minSdkVersion="17"
         android:targetSdkVersion="17" />
 
-    <!--
-          <uses-permission android:name="org.simalliance.openmobileapi.SMARTCARD" >
+    <uses-permission android:name="org.simalliance.openmobileapi.SMARTCARD" >
     </uses-permission>
-
-    -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />

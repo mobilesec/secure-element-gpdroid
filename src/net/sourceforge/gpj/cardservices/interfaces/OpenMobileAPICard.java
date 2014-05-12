@@ -88,6 +88,7 @@ public class OpenMobileAPICard extends Card {
 
 	@Override
 	public void disconnect(boolean reset) throws CardException {
+		closeChannels();
 		mSession.close();
 	}
 

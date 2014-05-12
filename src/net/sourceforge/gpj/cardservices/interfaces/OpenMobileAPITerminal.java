@@ -108,4 +108,7 @@ public class OpenMobileAPITerminal extends CardTerminal implements SEService.Cal
 			seService.shutdown();
 		}
 	}
+	public boolean isConnected() {
+		return seService.isConnected();
+	}
 }

@@ -16,6 +16,7 @@ public class GPKeyset implements Serializable{
 	private int ID;
 	private int version;
 	private String name;
+	private String displayName;
 	private String MAC;
 	private String ENC;
 	private String KEK;
@@ -24,7 +25,8 @@ public class GPKeyset implements Serializable{
 	public GPKeyset(int uniqueID, String name, int ID, int version, String MAC, String DEK, String KEK, String readerName) {
 		this.ID = ID;
 		this.version = version;
-		this.setName(name + " - " + ID);
+		this.setName(name);
+		this.setDisplayName(name+" - "+ID);
 		this.MAC = MAC;
 		this.ENC = DEK;
 		this.KEK = KEK;
@@ -106,5 +108,13 @@ public class GPKeyset implements Serializable{
 
 	public void setUniqueID(int uniqueID) {
 		this.uniqueID = uniqueID;
+	}
+
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
 	}
 }

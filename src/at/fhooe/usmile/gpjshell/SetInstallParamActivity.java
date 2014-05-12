@@ -32,28 +32,35 @@ public class SetInstallParamActivity extends Activity {
 				byte privileges = 0;
 				if (mEditParams.getText() != null && !mEditParams.getText().toString().equals("")
 						&& mEditPrivileges.getText() != null && !mEditPrivileges.getText().toString().equals("")) {
-					params = GPUtils.convertHexStringToByteArray(mEditParams
-							.getText().toString());
-					privileges = (byte)Integer.parseInt(mEditPrivileges
-									.getText().toString());
-
-					Intent intent = new Intent();
-					intent.putExtra("params", params);
-					intent.putExtra("privileges", privileges);
-					
-					//check if privileges is valid
-					if (Integer.parseInt(mEditPrivileges.getText().toString()) > 255
-							|| Integer.parseInt(mEditPrivileges.getText()
-									.toString()) < 0) {
+					if(mEditParams.getText().toString().length()%2 != 0){
 						Toast.makeText(SetInstallParamActivity.this,
-								"Please check your privileges",
+								"Please check your parameters. Parameters must be a hex value with odd number of values.",
 								Toast.LENGTH_LONG).show();
-					} else {
-						setResult(RESULT_OK, intent);
-						finish();
+					}
+					else{
+						params = GPUtils.convertHexStringToByteArray(mEditParams
+								.getText().toString());
+						privileges = (byte)Integer.parseInt(mEditPrivileges
+										.getText().toString());
+	
+						Intent intent = new Intent();
+						intent.putExtra("params", params);
+						intent.putExtra("privileges", privileges);
+						
+						//check if privileges is valid
+						if (Integer.parseInt(mEditPrivileges.getText().toString()) > 255
+								|| Integer.parseInt(mEditPrivileges.getText()
+										.toString()) < 0) {
+							Toast.makeText(SetInstallParamActivity.this,
+									"Please check your privileges",
+									Toast.LENGTH_LONG).show();
+						} else {
+							setResult(RESULT_OK, intent);
+							finish();
+						}
 					}
 				} else {
-					setResult(RESULT_CANCELED);
+					setResult(RESULT_OK);
 					finish();
 				}
 			}

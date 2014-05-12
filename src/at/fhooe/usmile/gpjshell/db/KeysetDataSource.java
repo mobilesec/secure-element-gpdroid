@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 import at.fhooe.usmile.gpjshell.objects.GPKeyset;
 
 public class KeysetDataSource {
@@ -39,9 +40,9 @@ public class KeysetDataSource {
 
 		//if it is a new keyset, then uid is preset to -1
 		if (keyset.getUniqueID() == -1) {
-			if (containsKeyset(keyset.getID(), keyset.getReaderName()))
+			if (containsKeyset(keyset.getName(), keyset.getReaderName()))
 				mDatabase.update(DatabaseConnection.TABLE_KEYSETS, values,
-						DatabaseConnection.COLUMN1_KEYSET_ID + "='" + keyset.getID() + "' AND "
+						DatabaseConnection.COLUMN6_NAME + "='" + keyset.getName() + "' AND "
 								+ DatabaseConnection.COLUMN7_READER + "='" + keyset.getReaderName()
 								+ "'", null);
 			else
@@ -57,12 +58,12 @@ public class KeysetDataSource {
 		}
 	}
 
-	public boolean containsKeyset(int id, String reader) {
+	public boolean containsKeyset(String name, String reader) {
 		return mDatabase.query(
 				DatabaseConnection.TABLE_KEYSETS,
-				new String[] { DatabaseConnection.COLUMN1_KEYSET_ID,
+				new String[] { DatabaseConnection.COLUMN6_NAME,
 						DatabaseConnection.COLUMN7_READER },
-				DatabaseConnection.COLUMN1_KEYSET_ID + "='" + id + "' AND "
+				DatabaseConnection.COLUMN6_NAME + "='" + name + "' AND "
 						+ DatabaseConnection.COLUMN7_READER + "='" + reader
 						+ "'", null, null, null, null).getCount() > 0;
 	}
@@ -103,9 +104,12 @@ public class KeysetDataSource {
 			String readerName = cursor.getString(cursor
 					.getColumnIndex(DatabaseConnection.COLUMN7_READER));
 
-			keysets.put(name, new GPKeyset(uid, name, id, version, MAC, DEK,
-					KEK, readerName));
+			GPKeyset newKeyset= new GPKeyset(uid, name, id, version, MAC, DEK,
+					KEK, readerName);
+			keysets.put(newKeyset.getDisplayName(), newKeyset);
 			cursor.moveToNext();
+			
+			Log.d("KeysetData", "name: " + name + "; id: "+id+"; mac: "+MAC);
 		}
 		return keysets;
 	}

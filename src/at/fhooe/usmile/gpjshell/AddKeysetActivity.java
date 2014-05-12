@@ -56,7 +56,7 @@ public class AddKeysetActivity extends Activity {
 					
 					KeysetDataSource source = new KeysetDataSource(AddKeysetActivity.this);
 					source.open();
-					boolean containsKey = source.containsKeyset(keyset.getID(), getIntent().getExtras().getString("readername"));
+					boolean containsKey = source.containsKeyset(keyset.getName(), getIntent().getExtras().getString("readername"));
 					source.close();
 					
 					if (containsKey)

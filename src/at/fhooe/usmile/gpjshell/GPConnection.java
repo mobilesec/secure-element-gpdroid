@@ -67,6 +67,10 @@ public class GPConnection {
 		mGPService.deleteAID(data.getSelectedApplet().getAID(), true);
 	}
 
+	public void deleteAID(AID deleteAID) throws GPDeleteException, CardException {
+
+		mGPService.deleteAID(deleteAID, true);
+	}
 	/**
 	 * initializes the keys for the smartcard to be used later. it uses a predefined keyset
 	 * @param channel 
@@ -153,4 +157,5 @@ public class GPConnection {
 
 		return data;
 	}
+
 }

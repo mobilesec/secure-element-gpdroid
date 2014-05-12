@@ -81,7 +81,7 @@ public class TCPConnection implements Runnable {
 					
 					@Override
 					public void run() {
-						mListener.fileReceived("file://"+file.getAbsolutePath());
+						mListener.fileReceived("file://"+file.getAbsolutePath(), 1, 0, 1);
 					}
 				});
 				

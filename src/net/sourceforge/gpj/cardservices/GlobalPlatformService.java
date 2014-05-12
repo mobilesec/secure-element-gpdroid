@@ -1170,7 +1170,7 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
                     maxLen -= 8;
 
                 if (origLc > maxLen) {
-                    throw new CardException("APDU too long for wrapping.");
+                    throw new CardException("APDU too long for wrapping. LC: " +origLc + " Max"+maxLen);
                 }
 
                 if (mac) {

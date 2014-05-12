@@ -5,23 +5,29 @@ import java.util.List;
 
 import javax.smartcardio.CardException;
 
+import org.simalliance.openmobileapi.SEService;
+import org.simalliance.openmobileapi.SEService.CallBack;
+
 import net.sourceforge.gpj.cardservices.AIDRegistry;
 import net.sourceforge.gpj.cardservices.AIDRegistryEntry;
 import net.sourceforge.gpj.cardservices.GPUtil;
 import net.sourceforge.gpj.cardservices.exceptions.GPDeleteException;
+import net.sourceforge.gpj.cardservices.interfaces.OpenMobileAPITerminal;
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class AppletListActivity extends Activity implements AppletDetailActivity.NoticeAppletEventListener{
+public class AppletListActivity extends Activity implements AppletDetailActivity.NoticeAppletEventListener, SEService.CallBack{
 
 	private static final String LOG_TAG = "AppletListActivity";
 	private List<String> appletNames = null;
 	private ArrayAdapter<String> mListAdapter;
+	private OpenMobileAPITerminal mTerminal;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +36,7 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 
 		final ListView listview = (ListView) findViewById(R.id.listview);
 
+		Log.d("Michi", "oncreate applet list");
 		setListData(listview);
 
 		listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -49,6 +56,20 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 		
 	}
 
+	@Override
+	protected void onResume() {
+		super.onResume();
+		mTerminal = new OpenMobileAPITerminal(this, this);
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		Log.d("Michi", "onpause applet list");
+		if (mTerminal != null) {
+			mTerminal.shutdown();
+		}
+	}
 	private void setListData(final ListView listview) {
 		AIDRegistry registry = GPConnection.getInstance().getRegistry();
 		appletNames = new ArrayList<String>();
@@ -112,6 +133,12 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 
 	@Override
 	public void onDialogOkClick(DialogFragment dialog) {
+		
+	}
+
+	@Override
+	public void serviceConnected(SEService service) {
+		// TODO Auto-generated method stub
 		
 	}
 
