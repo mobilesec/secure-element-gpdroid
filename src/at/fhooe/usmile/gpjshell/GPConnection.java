@@ -3,6 +3,7 @@ package at.fhooe.usmile.gpjshell;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 import javax.smartcardio.Card;
 import javax.smartcardio.CardChannel;
@@ -11,11 +12,10 @@ import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
 import net.sourceforge.gpj.cardservices.AID;
-import net.sourceforge.gpj.cardservices.AIDRegistry;
 import net.sourceforge.gpj.cardservices.AIDRegistryEntry;
-import net.sourceforge.gpj.cardservices.GPUtil;
 import net.sourceforge.gpj.cardservices.AIDRegistryEntry.Kind;
 import net.sourceforge.gpj.cardservices.CapFile;
+import net.sourceforge.gpj.cardservices.GPUtil;
 import net.sourceforge.gpj.cardservices.GlobalPlatformService;
 import net.sourceforge.gpj.cardservices.exceptions.GPDeleteException;
 import net.sourceforge.gpj.cardservices.exceptions.GPInstallForLoadException;
@@ -54,7 +54,7 @@ public class GPConnection {
 	}
 
 
-	public AIDRegistry getRegistry() {
+	public List<AIDRegistryEntry> getRegistry() {
 		return data.getRegistry();
 	}
 
@@ -66,7 +66,6 @@ public class GPConnection {
 		return data.getSelectedApplet();
 	}
 
-	
 	public void deleteSelectedApplet() throws GPDeleteException, CardException {
 		if (data.getSelectedApplet().getKind() == Kind.IssuerSecurityDomain
 				|| data.getSelectedApplet().getKind() == Kind.SecurityDomain) {
@@ -74,6 +73,7 @@ public class GPConnection {
 					"Deleting Security domain currently not supported");
 		}
 		mGPService.deleteAID(data.getSelectedApplet().getAID(), true);
+		data.removeSelectedAppletFromList();
 	}
 
 	public void deleteAID(AID deleteAID) throws GPDeleteException, CardException {
@@ -146,7 +146,7 @@ public class GPConnection {
 			GPInstallForLoadException, GPLoadException, CardException {
 		CapFile cpFile = new CapFile(new URL(_appletUrl).openStream(), null);
 
-		mGPService.loadCapFile(cpFile, false, false, 255 - 8, true, false);
+		mGPService.loadCapFile(cpFile, false, false, 255 - 16, true, false);
 
 		AID p = cpFile.getPackageAID();
 		Log.d(LOG_TAG, "Installing Applet with package AID " + p.toString());
@@ -160,9 +160,7 @@ public class GPConnection {
 	}
 
 	public GPAppletData loadAppletsfromCard() throws CardException {
-		AIDRegistry registry = mGPService.getStatus();
-
-		data.setRegistry(registry);
+		data.setRegistry( mGPService.getStatus().allPackages());
 
 		return data;
 	}
@@ -209,7 +207,7 @@ public class GPConnection {
 			throw new IOException("Not a valid path or not a cap file");
 		}
 		// String fileUrl = (String) _param;
-		String ret = "Loading Applet from " + _url+"\n";
+		String ret = "Loading Applet from " + _url+"<br/>";
 
 		installCapFile(_url, params, privileges);
 
@@ -225,11 +223,9 @@ public class GPConnection {
 		GPAppletData mApplets = loadAppletsfromCard();
 
 		return "Read all applets from reader "
-						+ _reader + ". "
-						+ mApplets.getRegistry().allPackages().size()
+						+ _reader + ". <br>"
+						+ mApplets.getRegistry().size()
 						+ " Applets.";
-
-		// listAppletsToLog();
 	}
 	/**
 	 * @param keyset
@@ -239,7 +235,7 @@ public class GPConnection {
 	 */
 	public String performCommand(OpenMobileAPITerminal _term, GPKeyset keyset, GPChannelSet channelSet,
 			GPCommand _cmd) {
-		String ret = null;
+		String ret = "";
 		try {
 			Card c = null;
 			boolean closeConn = true;
@@ -286,7 +282,7 @@ public class GPConnection {
 				deleteSelectedApplet();
 				ret = "Applet deleted";
 				break;
-			case APDU_LISTAPPLETS:
+			case APDU_DISPLAYAPPLETS_ONCARD:
 				ret = listApplets(_cmd.getSeekReaderName());
 				channel.close();	
 				

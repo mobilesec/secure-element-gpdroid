@@ -27,9 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
-import java.security.Security;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -43,7 +40,6 @@ import javax.smartcardio.Card;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
-import javax.smartcardio.CardTerminals;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
@@ -1608,151 +1604,120 @@ public class GlobalPlatformService implements ISO7816, APDUListener {
         GlobalPlatformService service = null;
         try {
 
-            /*
-             * Provider acrProv = null; try { Class<?> acrProvClass =
-             * Class.forName("ds.smartcards.acr122.ACR122Provider"); acrProv =
-             * (Provider)acrProvClass.newInstance(); } catch (Exception e) { }
-             * TerminalFactory tf = TerminalFactory.getInstance("ACR", null,
-             * acrProv);
-             */
-
-//            TerminalFactory tf;
-//            if (use_jcop_emulator == false)
-//                tf = TerminalFactory.getInstance("PC/SC", null);
-//            else
-//                tf = TerminalFactory.getInstance("JcopEmulator", null);
-
-            // System.out.println(tf.getProvider());
-//            CardTerminals terminals = tf.terminals();
-
-//            System.out.println("Found terminals: " + terminals.list());
-//            for (CardTerminal terminal : terminals
-//                    .list(CardTerminals.State.ALL)) {
-                try {
-                	Card c = null;
-                	try {
-                		c = terminal.connect("*");
-                	} catch (CardException e) {
-                		if (e.getCause().getMessage().equalsIgnoreCase("SCARD_E_NO_SMARTCARD")) {
-                			System.err.println("No card in reader " + terminal.getName());
+            try {
+            	Card c = null;
+            	try {
+            		c = terminal.connect("*");
+            	} catch (CardException e) {
+            		if (e.getCause().getMessage().equalsIgnoreCase("SCARD_E_NO_SMARTCARD")) {
+            			System.err.println("No card in reader " + terminal.getName());
 //                			continue;
-                		} else
-                			e.printStackTrace();
-                	}
-                    
-                    System.out.println("Found card in terminal: "
-                            + terminal.getName());
-                    System.out.println("ATR: "
-                            + GPUtil.byteArrayToString(c.getATR().getBytes()));
-                    CardChannel channel = c.getBasicChannel();
-                    service = (sdAID == null) ? new GlobalPlatformService(
-                            channel)
-                            : new GlobalPlatformService(sdAID, channel);
-                    service.addAPDUListener(service);
-                    service.open();
-                    service.setKeys(keySet, keys[0], keys[1], keys[2], diver);
-                    // TODO: make the APDU mode a parameter, properly adjust
-                    // loadSize accordingly
-                    int neededExtraSize = apduMode == APDU_CLR ? 0 :
-                         (apduMode == APDU_MAC ? 8 : 16);
-                    if (loadSize + neededExtraSize > defaultLoadSize) {
-                        loadSize -= neededExtraSize;
-                    }
-                    service.openSecureChannel(keySet, 0, 0,
-                            GlobalPlatformService.SCP_ANY,
-                            apduMode, gemalto);
+            		} else
+            			e.printStackTrace();
+            	}
+                
+                System.out.println("Found card in terminal: "
+                        + terminal.getName());
+                System.out.println("ATR: "
+                        + GPUtil.byteArrayToString(c.getATR().getBytes()));
+                CardChannel channel = c.getBasicChannel();
+                service = (sdAID == null) ? new GlobalPlatformService(
+                        channel)
+                        : new GlobalPlatformService(sdAID, channel);
+                service.addAPDUListener(service);
+                service.open();
+                service.setKeys(keySet, keys[0], keys[1], keys[2], diver);
+                // TODO: make the APDU mode a parameter, properly adjust
+                // loadSize accordingly
+                int neededExtraSize = apduMode == APDU_CLR ? 0 :
+                     (apduMode == APDU_MAC ? 8 : 16);
+                if (loadSize + neededExtraSize > defaultLoadSize) {
+                    loadSize -= neededExtraSize;
+                }
+                service.openSecureChannel(keySet, 0, 0,
+                        GlobalPlatformService.SCP_ANY,
+                        apduMode, gemalto);
 
-                    if (deleteAID.size() > 0) {
-                        for (AID aid : deleteAID) {
-                            try {
-                                service.deleteAID(aid, deleteDeps);
-                            } catch (CardException ce) {
-                                System.out.println("Could not delete AID: "
-                                        + aid);
-                                // This is when the applet is not there, ignore
-                            }
+                if (deleteAID.size() > 0) {
+                    for (AID aid : deleteAID) {
+                        try {
+                            service.deleteAID(aid, deleteDeps);
+                        } catch (CardException ce) {
+                            System.out.println("Could not delete AID: "
+                                    + aid);
+                            // This is when the applet is not there, ignore
                         }
                     }
-                    CapFile cap = null;
+                }
+                CapFile cap = null;
 
-                    if (capFileUrl != null) {
-                        cap = new CapFile(capFileUrl.openStream());
-                        service.loadCapFile(cap, loadDebug, loadCompSep,
-                                loadSize, loadParam, useHash);
-                    }
+                if (capFileUrl != null) {
+                    cap = new CapFile(capFileUrl.openStream());
+                    service.loadCapFile(cap, loadDebug, loadCompSep,
+                            loadSize, loadParam, useHash);
+                }
 
-                    if (installs.size() > 0) {
-                        for (InstallEntry install : installs) {
-                            if (install.appletAID == null) {
-                                AID p = cap.getPackageAID();
-                                for (AID a : cap.getAppletAIDs()) {
-                                    service.installAndMakeSelecatable(p, a,
-                                            null, (byte) install.priv,
-                                            install.params, null);
-                                }
-                            } else {
-                                service.installAndMakeSelecatable(
-                                        install.packageAID, install.appletAID,
+                if (installs.size() > 0) {
+                    for (InstallEntry install : installs) {
+                        if (install.appletAID == null) {
+                            AID p = cap.getPackageAID();
+                            for (AID a : cap.getAppletAIDs()) {
+                                service.installAndMakeSelecatable(p, a,
                                         null, (byte) install.priv,
                                         install.params, null);
-
                             }
+                        } else {
+                            service.installAndMakeSelecatable(
+                                    install.packageAID, install.appletAID,
+                                    null, (byte) install.priv,
+                                    install.params, null);
+
                         }
-
                     }
-                    if (listApplets) {
-                        AIDRegistry registry = service.getStatus();
-                        for (AIDRegistryEntry e : registry) {
-                            AID aid = e.getAID();
-                            int numSpaces = (15 - aid.getLength());
-                            String spaces = "";
-                            String spaces2 = "";
-                            for (int i = 0; i < numSpaces; i++) {
-                                spaces = spaces + "   ";
-                                spaces2 = spaces2 + " ";
-                            }
-                            System.out.print("AID: "
-                                    + GPUtil.byteArrayToString(aid.getBytes())
-                                    + spaces
-                                    + " "
-                                    + GPUtil.byteArrayToReadableString(aid
-                                            .getBytes()) + spaces2);
-                            System.out.format(" %s LC: %d PR: 0x%02X\n", e
-                                    .getKind().toShortString(), e
-                                    .getLifeCycleState(), e.getPrivileges());
-                            for (AID a : e.getExecutableAIDs()) {
-                                numSpaces = (15 - a.getLength()) * 3;
-                                spaces = "";
-                                for (int i = 0; i < numSpaces; i++)
-                                    spaces = spaces + " ";
-                                System.out
-                                        .println("     "
-                                                + GPUtil.byteArrayToString(a
-                                                        .getBytes())
-                                                + spaces
-                                                + " "
-                                                + GPUtil
-                                                        .byteArrayToReadableString(a
-                                                                .getBytes()));
-                            }
-                            System.out.println();
-                        }
 
-                    }
-                } catch (Exception ce) {
-                    ce.printStackTrace();
                 }
-//            }
-//        } catch (CardException e) {
-//        	if (e.getCause().getMessage().equalsIgnoreCase("SCARD_E_NO_READERS_AVAILABLE"))
-//        		System.out.println("No smart card readers found");
-//        	else
-//        		e.printStackTrace();
-//        } catch (NoSuchAlgorithmException e) {
-//        	if (e.getCause().getMessage().equalsIgnoreCase("SCARD_E_NO_SERVICE"))
-//        		System.out.println("No smart card readers found (PC/SC service not running)");
-//        	else
-//        		e.printStackTrace();
+                if (listApplets) {
+                    AIDRegistry registry = service.getStatus();
+                    for (AIDRegistryEntry e : registry) {
+                        AID aid = e.getAID();
+                        int numSpaces = (15 - aid.getLength());
+                        String spaces = "";
+                        String spaces2 = "";
+                        for (int i = 0; i < numSpaces; i++) {
+                            spaces = spaces + "   ";
+                            spaces2 = spaces2 + " ";
+                        }
+                        System.out.print("AID: "
+                                + GPUtil.byteArrayToString(aid.getBytes())
+                                + spaces
+                                + " "
+                                + GPUtil.byteArrayToReadableString(aid
+                                        .getBytes()) + spaces2);
+                        System.out.format(" %s LC: %d PR: 0x%02X\n", e
+                                .getKind().toShortString(), e
+                                .getLifeCycleState(), e.getPrivileges());
+                        for (AID a : e.getExecutableAIDs()) {
+                            numSpaces = (15 - a.getLength()) * 3;
+                            spaces = "";
+                            for (int i = 0; i < numSpaces; i++)
+                                spaces = spaces + " ";
+                            System.out
+                                    .println("     "
+                                            + GPUtil.byteArrayToString(a
+                                                    .getBytes())
+                                            + spaces
+                                            + " "
+                                            + GPUtil
+                                                    .byteArrayToReadableString(a
+                                                            .getBytes()));
+                        }
+                        System.out.println();
+                    }
+
+                }
+            } catch (Exception ce) {
+                ce.printStackTrace();
+            }
         }
         catch (Exception e) {
         	System.out.format("Terminated by escaping exception %s\n", e

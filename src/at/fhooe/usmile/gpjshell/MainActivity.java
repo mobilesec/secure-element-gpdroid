@@ -1,26 +1,12 @@
 package at.fhooe.usmile.gpjshell;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import javax.smartcardio.Card;
-import javax.smartcardio.CardChannel;
-import javax.smartcardio.CardException;
-import javax.smartcardio.ResponseAPDU;
-
-import net.sourceforge.gpj.cardservices.AID;
-import net.sourceforge.gpj.cardservices.GPUtil;
 import net.sourceforge.gpj.cardservices.GlobalPlatformService;
-import net.sourceforge.gpj.cardservices.exceptions.GPDeleteException;
-import net.sourceforge.gpj.cardservices.exceptions.GPInstallForLoadException;
-import net.sourceforge.gpj.cardservices.exceptions.GPLoadException;
-import net.sourceforge.gpj.cardservices.exceptions.GPSecurityDomainSelectionException;
 import net.sourceforge.gpj.cardservices.interfaces.OpenMobileAPITerminal;
 
 import org.simalliance.openmobileapi.Reader;
@@ -46,7 +32,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import at.fhooe.usmile.gpjshell.db.ChannelSetDataSource;
 import at.fhooe.usmile.gpjshell.db.KeysetDataSource;
-import at.fhooe.usmile.gpjshell.objects.GPAppletData;
 import at.fhooe.usmile.gpjshell.objects.GPChannelSet;
 import at.fhooe.usmile.gpjshell.objects.GPConstants;
 import at.fhooe.usmile.gpjshell.objects.GPKeyset;
@@ -83,7 +68,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	private ArrayAdapter<String> mChannelSetAdapter;
 
 	public enum APDU_COMMAND {
-		APDU_INSTALL, APDU_DELETE_SENT_APPLET, APDU_LISTAPPLETS, APDU_SELECT, APDU_SEND, APDU_GET_DATA, APDU_DELETE_SELECTED_APPLET
+		APDU_INSTALL, APDU_DELETE_SENT_APPLET, APDU_DISPLAYAPPLETS_ONCARD, APDU_SELECT, APDU_SEND, APDU_GET_DATA, APDU_DELETE_SELECTED_APPLET
 	}
 
 	private String mAppletUrl = null;
@@ -466,7 +451,7 @@ public class MainActivity extends Activity implements SEService.CallBack,
 
 				@Override
 				public void onClick(View v) {
-					performCommand(APDU_COMMAND.APDU_LISTAPPLETS,
+					performCommand(APDU_COMMAND.APDU_DISPLAYAPPLETS_ONCARD,
 							mReaderSpinner.getSelectedItemPosition(), null,
 							(byte) 0, null);
 
@@ -604,8 +589,11 @@ public class MainActivity extends Activity implements SEService.CallBack,
 	public class LogMe {
 		public void log(String _tag, String _text) {
 			Log.d(_tag, _text);
-			mLog.append(Html.fromHtml("<font color=\"#ff0000\">" + _tag
-					+ "</font> : " + _text + "<br>"));
+			String[] lines = _text.split("<br>|<br/>");
+			for (String line : lines) {
+				mLog.append(Html.fromHtml("<font color=\"#ff0000\">" + _tag
+						+ "</font> : " + line + "<br>"));	
+			}
 		}
 
 		public void e(String _tag, String _text) {

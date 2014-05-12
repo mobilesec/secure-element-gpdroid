@@ -3,20 +3,17 @@ package at.fhooe.usmile.gpjshell;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.smartcardio.CardException;
-
-import org.simalliance.openmobileapi.SEService;
-import org.simalliance.openmobileapi.SEService.CallBack;
-
-import net.sourceforge.gpj.cardservices.AIDRegistry;
+import net.sourceforge.gpj.cardservices.AID;
 import net.sourceforge.gpj.cardservices.AIDRegistryEntry;
 import net.sourceforge.gpj.cardservices.GPUtil;
-import net.sourceforge.gpj.cardservices.exceptions.GPDeleteException;
 import net.sourceforge.gpj.cardservices.interfaces.OpenMobileAPITerminal;
+
+import org.simalliance.openmobileapi.SEService;
+
 import android.app.Activity;
 import android.app.DialogFragment;
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -37,6 +34,7 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 	private GPKeyset mKeySet;
 	private GPChannelSet mChannelSet;
 	private int mSeekReader;
+	private List<AIDRegistryEntry> mRegistry;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +43,6 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 
 		final ListView listview = (ListView) findViewById(R.id.listview);
 
-		Log.d("Michi", "oncreate applet list");
 		setListData(listview);
 
 		mKeySet = (GPKeyset) getIntent().getSerializableExtra(EXTRA_KEYSET);
@@ -56,8 +53,6 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 			@Override
 			public void onItemClick(AdapterView<?> parent, final View view,
 					int position, long id) {
-//				final String item = (String) parent.getItemAtPosition(position);
-
 				GPConnection.getInstance(getApplicationContext()).setSelectedApplet(position);
 
 				showAppletDetailsDialog();
@@ -77,31 +72,41 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 	@Override
 	protected void onPause() {
 		super.onPause();
-		Log.d("Michi", "onpause applet list");
 		if (mTerminal != null) {
 			mTerminal.shutdown();
 		}
 	}
+	private void returnToHome(){
+		Intent homeIntent= new Intent(this, MainActivity.class);
+		homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		startActivity(homeIntent);
+	}
+	
 	private void setListData(final ListView listview) {
-		AIDRegistry registry = GPConnection.getInstance(getApplicationContext()).getRegistry();
+		List<AIDRegistryEntry> registry = GPConnection.getInstance(getApplicationContext()).getRegistry();
 		appletNames = new ArrayList<String>();
 		
-		updateData(registry);
-		
-		mListAdapter = new ArrayAdapter<String>(this,
-				android.R.layout.simple_list_item_1, appletNames);
-		listview.setAdapter(mListAdapter);
-		mListAdapter.notifyDataSetChanged();
+		if(registry==null){
+			returnToHome();
+		} else {
+			
+			mRegistry = registry;
+			updateData(registry);
+			
+			mListAdapter = new ArrayAdapter<String>(this,
+					android.R.layout.simple_list_item_1, appletNames);
+			listview.setAdapter(mListAdapter);
+			mListAdapter.notifyDataSetChanged();
+		}
 	}
 
-	private void updateData(AIDRegistry registry) {
-		List<AIDRegistryEntry> applets = registry.allPackages();
-
+	private void updateData(List<AIDRegistryEntry> registry) {
+		
 		String spaces = "";
 		int numSpaces = 0;
 		
-		for(int i =0; i < applets.size(); i++){
-			AIDRegistryEntry entry = applets.get(i);
+		for(int i =0; i < registry.size(); i++){
+			AIDRegistryEntry entry = registry.get(i);
 
 			numSpaces = (10 - entry.getAID().getLength()) * 3;
 			spaces = "";
@@ -125,28 +130,21 @@ public class AppletListActivity extends Activity implements AppletDetailActivity
 
 	@Override
 	public void onDialogDeleteClick(DialogFragment dialog) {
-	
-		try {			
-			GPCommand cmd = new GPCommand(APDU_COMMAND.APDU_DELETE_SELECTED_APPLET, mSeekReader, null, (byte)0, null);
-			GPConnection.getInstance(getApplicationContext()).performCommand(mTerminal, mKeySet, mChannelSet, cmd);
-			
-			MainActivity.log().log(LOG_TAG, "Successfully removed: "+GPConnection.getInstance(getApplicationContext()).getSelectedApplet().getAID());
-			
-			/**
-			 * Reload
-			 */
-			GPConnection.getInstance(this).loadAppletsfromCard();
-			
-			appletNames = new ArrayList<String>();
-			updateData(GPConnection.getInstance(getApplicationContext()).getRegistry());
-			mListAdapter.clear();
-			mListAdapter.addAll(appletNames);
-
-		} catch (GPDeleteException e) {
-			MainActivity.log().e(LOG_TAG, "GPDeleteException: ", e);
-		} catch (CardException e) {
-			MainActivity.log().e(LOG_TAG, "CardException: ", e);
-		}
+		AID delAID= GPConnection.getInstance(getApplicationContext()).getSelectedApplet().getAID();
+		GPCommand cmd = new GPCommand(APDU_COMMAND.APDU_DELETE_SELECTED_APPLET, mSeekReader, null, (byte)0, null);
+		GPConnection.getInstance(getApplicationContext()).performCommand(mTerminal, mKeySet, mChannelSet, cmd);
+		
+		MainActivity.log().log(LOG_TAG, "Successfully removed: "+delAID);
+		
+		/**
+		 * Reload
+		 */
+		mRegistry = GPConnection.getInstance(this).getRegistry();
+		
+		appletNames = new ArrayList<String>();
+		updateData(mRegistry);
+		mListAdapter.clear();
+		mListAdapter.addAll(appletNames);
 	}
 
 	@Override
