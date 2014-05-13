@@ -91,6 +91,7 @@ public class GPConnection {
 
 		mGPService.deleteAID(deleteAID, true);
 	}
+	
 	/**
 	 * initializes the keys for the smartcard to be used later. it uses a predefined keyset
 	 * @param channel 
@@ -180,10 +181,8 @@ public class GPConnection {
 		try {
 			deleteAID(aid);
 		} catch (GPDeleteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (CardException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -208,16 +207,14 @@ public class GPConnection {
 	private String installApplet(String _url, byte[] params, byte privileges)
 			throws IOException, MalformedURLException,
 			GPInstallForLoadException, GPLoadException, CardException {
-		// String fileUrl =
-		// "file:"+Environment.getExternalStorageDirectory().getPath() +
-		// "/usmile/instApplet/apdutester.cap";
+
 		if (_url == null) {
 			return "no Applet selected";
 		}
 		if (!(_url).endsWith(".cap")) {
 			throw new IOException("Not a valid path or not a cap file");
 		}
-		// String fileUrl = (String) _param;
+
 		String ret = "Loading Applet from " + _url+"<br/>";
 
 		installCapFile(_url, params, privileges);
