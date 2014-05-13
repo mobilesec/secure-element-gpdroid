@@ -1,0 +1,35 @@
+============================================================
+GPDroid -- Secure Element Applet Management Tool for Android
+============================================================
+
+This Android application is designed to manage applets on your secure element. You can install and delete applets to and from the secure elements. Additionally, you are able to list all installed applets of the secure element and directly get data from it. This tool is only made for development and testing. It is not recommended to use it in bulk deployment.
+
+
+------------------------ DISCLAIMER ------------------------
+
+Your are using this application at your own risk. Incorrect usage may cause hardware damages and lead to permanently broken devices. It is essential to have profound knowledge of secure elements, APDU-communication and the theoretical background. Furthermore, you have to know the appropriate keys and secure channel parameters for your secure element. 
+
+We are not responsible for any damage caused by this application, incorrect usage or correctness of this manual. 
+
+----------------------- REQUIREMENTS -----------------------
+
+First of all, to use the application you need knowledge about secure elements and the secure channel protocol of GlobalPlatform. 
+
+The application itself uses the OpenMobileAPI to communicate with the secure elements. One implementation of this API is the SmarcardAPI from the "seek-for-android" group (https://code.google.com/p/seek-for-android/wiki/SmartcardAPI). This API requires a service to be installed on the phone that can be accessed within an Android Application. There are already mobile devices on the market which provice this service on their phone (e.g. Galaxy S3, S4). A list of supported devices is online at https://code.google.com/p/seek-for-android/wiki/Devices. 
+If you want to include the service to your own build, you can follow the instructions in https://code.google.com/p/seek-for-android/wiki/BuildingTheSystem or the description int he blog posts http://usmile.at/blog/cyanogenmod-seek-uicc-s2-s3 and http://usmile.at/blog/seek-galaxys3.
+
+Your Android app needs to refere that it is using this OpenMobileAPI to compile properly. For that purpose, you have to either download the API yourself or simply install the Android SDK add-on as described in 
+
+
+
+----------------------- INSTALLATION -----------------------
+
+This application is designed for Android 4.3+ including the SmartcardAPI (see requirements). Additionally, you need a secure element for which you have the appropriate keys. The application is compatible to gemalto as well as non gemalto secure elements.
+
+You can build and install the application like any other Android application with any development IDE of your choice. If you want to use eclipse, you can simply import the package. 
+
+------------------------ USER GUIDE ------------------------
+
+
+
+
