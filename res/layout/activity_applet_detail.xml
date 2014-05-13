@@ -1,0 +1,37 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/detAppl_readableTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Applet AIDs"
+        android:textAlignment="viewStart"/>
+    
+    <TextView
+        android:id="@+id/detAppl_priviliges"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="viewStart"
+        android:text="test"
+        android:textStyle="italic" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Applet AIDs"
+        android:paddingTop="4pt"
+        android:textStyle="bold"
+        android:textAlignment="viewStart"/>
+    
+    <TextView
+        android:id="@+id/detAppl_allIDs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="test2"
+        android:textAlignment="viewStart"/>
+
+</LinearLayout>

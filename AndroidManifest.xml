@@ -5,32 +5,71 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="8"
+        android:minSdkVersion="17"
         android:targetSdkVersion="17" />
 
-    <uses-permission android:name="org.simalliance.openmobileapi.SMARTCARD"></uses-permission>
+    <uses-permission android:name="org.simalliance.openmobileapi.SMARTCARD" >
+    </uses-permission>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/> 
-    
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-    	<uses-library android:name="org.simalliance.openmobileapi" android:required="true"/>
+
+        <!--
+             <uses-library
+            android:name="org.simalliance.openmobileapi"
+            android:required="true" />
+
+
+
+
+        -->
         <activity
             android:name="at.fhooe.usmile.gpjshell.MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name="at.fhooe.usmile.gpjshell.AppletListActivity" >
+        </activity>
         <activity
-            android:name="at.fhooe.usmile.gpjshell.GPShellActivity"
-            android:label="@string/title_activity_gpshell" >
+            android:name="at.fhooe.usmile.gpjshell.AppletDetailActivity"
+            android:label="@string/title_activity_applet_detail"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Dialog" >
+        </activity>
+        <activity
+            android:name="at.fhooe.usmile.gpjshell.AddKeysetActivity"
+            android:label="@string/title_activity_add_keyset"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Dialog" >
+        </activity>
+        <activity
+            android:name="at.fhooe.usmile.gpjshell.AddChannelSetActivity"
+            android:label="@string/title_activity_add_channel_set"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Dialog" >
+        </activity>
+        <activity
+            android:name="at.fhooe.usmile.gpjshell.SetInstallParamActivity"
+            android:label="@string/title_activity_set_install_param"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Dialog" >
+        </activity>
+        <activity
+            android:name="at.fhooe.usmile.gpjshell.GetDataActivity"
+            android:label="@string/title_activity_get_data" 
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Dialog" >
         </activity>
     </application>
 
