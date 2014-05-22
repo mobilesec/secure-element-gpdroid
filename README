@@ -1,6 +1,6 @@
-============================================================
-GPDroid -- Secure Element Applet Management Tool for Android
-============================================================
+================================================================
+= GPDroid -- Secure Element Applet Management Tool for Android =
+================================================================
 
 This Android application is designed to manage applets on your secure element. You can install and delete applets to and from the secure elements. Additionally, you are able to list all installed applets of the secure element and directly get data from it. This tool is only made for development and testing. It is not recommended to use it in bulk deployment.
 
@@ -18,8 +18,7 @@ First of all, to use the application you need knowledge about secure elements an
 The application itself uses the OpenMobileAPI to communicate with the secure elements. One implementation of this API is the SmarcardAPI from the "seek-for-android" group (https://code.google.com/p/seek-for-android/wiki/SmartcardAPI). This API requires a service to be installed on the phone that can be accessed within an Android Application. There are already mobile devices on the market which provice this service on their phone (e.g. Galaxy S3, S4). A list of supported devices is online at https://code.google.com/p/seek-for-android/wiki/Devices. 
 If you want to include the service to your own build, you can follow the instructions in https://code.google.com/p/seek-for-android/wiki/BuildingTheSystem or the description int he blog posts http://usmile.at/blog/cyanogenmod-seek-uicc-s2-s3 and http://usmile.at/blog/seek-galaxys3.
 
-Your Android app needs to refere that it is using this OpenMobileAPI to compile properly. For that purpose, you have to either download the API yourself or simply install the Android SDK add-on as described in 
-
+In order to compile your Android app with this OpenMobileAPI, you need to reference it in your build path. For that purpose, you have to either download the API yourself and add it to the build path or simply install the Android SDK add-on as described in https://code.google.com/p/seek-for-android/wiki/UsingSmartCardAPI. 
 
 
 ----------------------- INSTALLATION -----------------------
@@ -28,8 +27,45 @@ This application is designed for Android 4.3+ including the SmartcardAPI (see re
 
 You can build and install the application like any other Android application with any development IDE of your choice. If you want to use eclipse, you can simply import the package. 
 
+
 ------------------------ USER GUIDE ------------------------
 
+1. Initialization
+
+Before you can start with managing applets, you may have to choose the correct reader for your secure element. 
+After you selected to reader, it is necessary to enter the correct keyset for your secure element Initially, the default key is already installed in the application. Additionally, you may add further keys to the selected reader for your secure element or delete it. 
+Furthermore, the parameters for the secure channel have to be set in a similar way. Default parameters are preinstalled, which may not necessarily fit for your secure element. It is also possible to set custom parameters for the secure element or delete the parameter setting. 
+
+
+2. Keyset and Secure Channel Parameters
+
+2.1. Setting the Keyset
+
+For your custom keyset, you begin by selecting a name, which you want to see in the selection. You may freely choose, what suits you best. This keyset will be bound to the selected reader!
+The ID has to fit the secure element. Every secure element needs a special ID for the key. If you don’t know them, look into the documentation of the secure element. You may find it there as well as the appropriate keys. This value is between 0 and 255.
+Afterwards you have to select a version number for the keyset and you have to set the 3 HEX-coded keys for your secure element. If you don’t know them, it is strongly recommended to stop using the application. You may brick your secure element and/or your device.
+After setting all parameters, click OK and the data will be saved to your local storage and available in your spinner. Note that you have to set the ID as well as the version before you can continue.
+
+2.2. Setting Secure Channel Paramters
+
+For your secure channel, you have to set 3 parameters. First, you may freely choose the name of your channel.
+The first parameter is the SCP-Version of the channel parameters
+The second is the security level of the secure elements secure channel. Please note, that this may only be a value between 0 and 255.
+In the end, please check, if your secure element is a gemalto smartcard. If so, please tick the checkbox.
+To finish and complete the setting, please click OK! Note, that the version as well as the security level has to be set.
+
+
+3. Managing Applets
+
+Let’s come to the really serious and critic part. 
+Pressing the “Choose Applet” button will prompt you with a selector for a file-manager. If you have not yet installed any file-manager, please check the play-store for one.
+In the filemanager, please select your applet, which you want to install. The selected applet will be shown in the Textbox above the buttons.
+Next, we will do the critic stuff and install the applet. Please check your previously set parameters for correctness!!
+After clicking the “Install Applet” button, you will be prompted with a screen asking you for further install parameters (see figure 2 on this page). 
+If no parameters are necessary, please enter nothing or 0. Only if you are sure of the appropriate parameters, please type them into the editing fields. 
+As soon as you click “Set”, the install process started! You cannot stop it from here on. If an error occurs, it will be shown in the log-area. If some sort of crypto error or exception occurs, your keys are wrong and you should double check them! Continuing with wrong keys will permanently brick your secure element!
+Clicking the “List Applets” button will give you a list of actual installed applets on the secure element.
+Clicking “Get Data” will show you another screen, where you can enter the two parameters P1 and P2 for your APDU command. Depending on those two commands, your answer will differ and give the response selected by those 2 parameters. The response will be shown in the previously mentioned log as a HEX string. 
 
 
 
